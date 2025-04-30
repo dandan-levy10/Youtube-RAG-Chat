@@ -1,0 +1,12 @@
+name: chromadb-test
+channels:
+  - defaults
+  - https://repo.anaconda.com/pkgs/main
+  - https://repo.anaconda.com/pkgs/r
+dependencies:
+  - conda-forge::chromadb
+  - ipykernel
+  - pytorch
+  - openblas
+  - ipywidgets
+prefix: /opt/anaconda3/envs/chromadb-test
