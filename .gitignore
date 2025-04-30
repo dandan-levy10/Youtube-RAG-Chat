@@ -1,2 +1,5 @@
 # directories
 /data
+
+# macOS Finder metadata
+.DS_Store
