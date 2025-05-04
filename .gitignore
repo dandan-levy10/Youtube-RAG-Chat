@@ -6,3 +6,5 @@
 
 # vector db
 chess_chroma_db/
+
+transcript_cache/
