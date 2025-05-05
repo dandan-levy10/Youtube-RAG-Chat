@@ -8,7 +8,7 @@ def setup_logging():
     logging.basicConfig(
         filename=str(LOG_FILE),
         level=logging.INFO,
-        format="%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(name)s – %(message)s",
+        format="%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(name)s - %(message)s",
         force=True
     )
 
