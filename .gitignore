@@ -10,6 +10,10 @@ chess_chroma_db/
 
 transcript_cache/
 
+# trialling files
+chromadb-test.ipynb
+youtube-RAG.ipynb
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
