@@ -12,5 +12,5 @@ def chunk_documents(documents, chunk_size, chunk_overlap):
     )
     docs = text_splitter.split_documents(documents=documents)
     logger.info(f"Split document '{docs[0].metadata["title"]}' into {len(docs)} chunks")
-    logger.info(f"Chunk samples: {docs[:2]}")
+    logger.debug(f"Chunk samples: {docs[:2]}")
     return docs

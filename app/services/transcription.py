@@ -27,10 +27,10 @@ def get_transcript(video_url: str) -> list[Document]:
     cache_path = CACHE_DIR / f"{video_id}.json"
     if cache_path.exists():
         # print("retrieving from cache....")
-        logger.info("retrieving from cache....")
         data = json.loads(cache_path.read_text())
         docs = [Document(metadata = doc["metadata"], page_content= doc["page_content"]) for doc in data]
-        logger.info(docs[0].page_content[:300])
+        logger.info(f"Successfully retrieved transcript for video '{docs[0].metadata["title"]}' (id: {video_id}) from cache.")
+        logger.debug(f"Document sample: {docs[0].page_content[:200]}")
         # print(docs)
         # print(docs[0].page_content)
         return docs
@@ -38,11 +38,13 @@ def get_transcript(video_url: str) -> list[Document]:
     # Load transcript only
     loader = YoutubeLoader.from_youtube_url(video_url)
     docs = loader.load()
+    logger.info("Downloaded transcript for video {video_id} from Langchain YoutubeLoader")
 
     # fetch video metadata via yt-dlp
     ydl_opts = {"quiet": True, "skip_download": True}
     with YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(video_url, download=False) # get metadata, don't dl video/audio
+    logger.info(f"Downloaded {info.get("title")} video metadata from yt-dlp")
     # video_meta = {
     #     "title": info.get("title"),
     #     "uploader": info.get("uploader"), 
@@ -57,7 +59,7 @@ def get_transcript(video_url: str) -> list[Document]:
     serializable = [{"page_content": doc.page_content, "metadata": doc.metadata} for doc in docs]
     cache_path.write_text(json.dumps(serializable))
     # print(docs[0].page_content)
-    logger.info(docs[0].page_content)
+    logger.debug(f"Document sample: {docs[0].page_content[:200]}")
     # print(docs)
     return docs
 

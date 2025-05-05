@@ -1,5 +1,6 @@
 # directories
 /data
+/app/chroma_db
 
 # macOS Finder metadata
 .DS_Store
@@ -17,3 +18,4 @@ __pycache__/
 
 # log files
 *.log
+
