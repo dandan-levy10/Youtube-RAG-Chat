@@ -12,7 +12,7 @@ class ChatMemory:
 
     def append(self, user_message: str, assistant_message: str):
         self.buffer.append((user_message, assistant_message))
-        logger.info(f"Appended (user_message, assistant_message) tumple to memory")
+        logger.debug(f"Appended (user_message, assistant_message) tumple to memory")
 
         if len(self.buffer) > self.max_turns:
             self.buffer.pop(0)
@@ -20,6 +20,7 @@ class ChatMemory:
 
     def to_prompt(self):
         history = [f"User: {u}; \nAssistant: {a}" for u, a in self.buffer]
+        logger.debug(f"ChatMemory.to_prompt called. History: {history}")
         return "\n\n".join(history)
 
 class TranscriptReceiver:
@@ -27,10 +28,12 @@ class TranscriptReceiver:
         self.retriever = vector_store.as_retriever(
             search_kwargs={"k":k}
         )
+        logger.info(f"Initialised TranscriptReciever with vector store {vector_store.__repr__}, {k} retrival context chunks")
 
     def get_context(self, query: str) -> str:
         results = self.retriever.similarity_search_with_relevance_scores(query=query)
         context = "\n\n".join(result[0].page_content for result in results)
+        logger.debug(f"TranscriptReciever.get_context called. Context: {context}")
 
         return context
         
@@ -39,6 +42,7 @@ class ChatSession:
         self.llm = llm
         self.retriever = retriever
         self.memory = memory
+        logger.debug(f"ChatSession initialised with {llm.__str__}, retriever {retriever.__str__}, memory {memory.__str__}")
 
     def ask(self, question: str) -> str:
         # 1) Retrieve context
@@ -55,6 +59,12 @@ class ChatSession:
 
         prompt_blocks.append(f"User: {question} \n\n Assistant:")
 
+        prompt = "\n".join(prompt_blocks)
+        logger.debug("Prompt: {prompt}")
+
         # 3) Call your LLM
+        answer = self.llm.generate(prompt)
+        logger.info("LLM called. Answer: {answer}")
 
         # 4) Update memory
+        self.memory.append((question, answer))
