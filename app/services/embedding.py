@@ -14,7 +14,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 # initalise embedding function
 def get_embedding_function():
-    embedding_function = OllamaEmbeddings(model="nomic-embed-text", show_progress=True)
+    embedding_function = OllamaEmbeddings(model="nomic-embed-text")
     return embedding_function
  
 

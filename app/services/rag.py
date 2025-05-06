@@ -1,6 +1,7 @@
 from app.services.embedding import get_embedding_function
 from langchain_ollama import OllamaLLM
 from langchain.vectorstores import VectorStore
+from langchain_chroma import Chroma
 import logging
 
 logger = logging.getLogger(__name__)
@@ -23,22 +24,28 @@ class ChatMemory:
         logger.debug(f"ChatMemory.to_prompt called. History: {history}")
         return "\n\n".join(history)
 
-class TranscriptReceiver:
-    def __init__(self, vector_store: VectorStore, embedding_fn, k=4):
+class TranscriptRetriever:
+    def __init__(self, vector_store: VectorStore, embedding_fn, k=4): # TODO: remove embedding_fn if not needed
         self.retriever = vector_store.as_retriever(
             search_kwargs={"k":k}
         )
         logger.info(f"Initialised TranscriptReciever with vector store {vector_store.__repr__}, {k} retrival context chunks")
 
     def get_context(self, query: str) -> str:
-        results = self.retriever.similarity_search_with_relevance_scores(query=query)
-        context = "\n\n".join(result[0].page_content for result in results)
+        logger.debug(f"get_context received query of type {type(query)}, {query}")
+        try:
+            results = self.retriever.get_relevant_documents(query=query)
+        except Exception:
+            logger.error("Failed calling get_relevant_documents with query=%r", query, exc_info=True)
+            raise
+
+        context = "\n\n".join(result.page_content for result in results)
         logger.debug(f"TranscriptReciever.get_context called. Context: {context}")
 
         return context
         
 class ChatSession:
-    def __init__(self, llm, retriever: TranscriptReceiver, memory: ChatMemory):
+    def __init__(self, llm, retriever: TranscriptRetriever, memory: ChatMemory):
         self.llm = llm
         self.retriever = retriever
         self.memory = memory
@@ -60,11 +67,28 @@ class ChatSession:
         prompt_blocks.append(f"User: {question} \n\n Assistant:")
 
         prompt = "\n".join(prompt_blocks)
-        logger.debug("Prompt: {prompt}")
+        logger.debug(f"Prompt: {prompt}")
 
         # 3) Call your LLM
-        answer = self.llm.generate(prompt)
-        logger.info("LLM called. Answer: {answer}")
+        answer = self.llm.generate([prompt])
+        logger.info(f"LLM called. Answer: {answer}")
 
         # 4) Update memory
-        self.memory.append((question, answer))
+        self.memory.append(user_message=question, assistant_message=answer)
+
+
+def create_chat_session():
+    # (1) instantiate your pieces
+    memory    = ChatMemory(max_turns=3)
+    embedding_function = get_embedding_function()
+    vectordb = Chroma(
+        embedding_function= embedding_function,
+        persist_directory="app/chroma_db"
+        )
+    retriever = TranscriptRetriever(vector_store=vectordb, embedding_fn=embedding_function, k=5)
+    llm       = OllamaLLM(model="llama3.2")
+
+    # (2) create a session
+    session = ChatSession(llm=llm, retriever=retriever, memory=memory)
+    return session
+
