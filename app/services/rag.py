@@ -1,7 +1,7 @@
 from app.services.embedding import get_embedding_function
 from langchain_ollama import OllamaLLM
 from langchain.vectorstores import VectorStore
-from langchain_chroma import Chroma
+from langchain_chroma.vectorstores import Chroma
 import logging
 
 logger = logging.getLogger(__name__)
@@ -27,6 +27,7 @@ class ChatMemory:
 class TranscriptRetriever:
     def __init__(self, vector_store: VectorStore, embedding_fn, k=4): # TODO: remove embedding_fn if not needed
         self.retriever = vector_store.as_retriever(
+            search_type= "mmr",
             search_kwargs={"k":k}
         )
         logger.info(f"Initialised TranscriptReciever with vector store {vector_store.__repr__}, {k} retrival context chunks")
@@ -45,26 +46,33 @@ class TranscriptRetriever:
         return context
         
 class ChatSession:
-    def __init__(self, llm, retriever: TranscriptRetriever, memory: ChatMemory):
+    def __init__(self, llm, retriever: TranscriptRetriever, memory: ChatMemory, prompt_template: str):
         self.llm = llm
         self.retriever = retriever
         self.memory = memory
+        self.prompt_template = prompt_template
         logger.debug(f"ChatSession initialised with {llm.__str__}, retriever {retriever.__str__}, memory {memory.__str__}")
 
     def ask(self, question: str) -> str:
         # 1) Retrieve context
         context = self.retriever.get_context(query = question)
 
+        # logger.debug(f"Excerpt: {context}")
+
         # 2) Build the prompt
         prompt_blocks = []
+
+        prompt_blocks.append(self.prompt_template)
         
         history = self.memory.to_prompt()
         if history:
             prompt_blocks.append(history)
 
-        prompt_blocks.append("Relevant context: \n\n" + context)
+        prompt_blocks.append(f"User: {question} \n\n")
 
-        prompt_blocks.append(f"User: {question} \n\n Assistant:")
+        prompt_blocks.append(f"Relevant context: \n\n {context} \n\n")
+
+        prompt_blocks.append(f"Assistant: \n")
 
         prompt = "\n".join(prompt_blocks)
         logger.debug(f"Prompt: {prompt}")
@@ -77,18 +85,20 @@ class ChatSession:
         self.memory.append(user_message=question, assistant_message=answer)
 
 
+prompt_starter = "You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise."
+
 def create_chat_session():
     # (1) instantiate your pieces
-    memory    = ChatMemory(max_turns=3)
+    memory    = ChatMemory(max_turns=5)
     embedding_function = get_embedding_function()
     vectordb = Chroma(
         embedding_function= embedding_function,
         persist_directory="app/chroma_db"
         )
-    retriever = TranscriptRetriever(vector_store=vectordb, embedding_fn=embedding_function, k=5)
+    retriever = TranscriptRetriever(vector_store=vectordb, embedding_fn=embedding_function, k=6)
     llm       = OllamaLLM(model="llama3.2")
 
     # (2) create a session
-    session = ChatSession(llm=llm, retriever=retriever, memory=memory)
+    session = ChatSession(llm=llm, retriever=retriever, memory=memory, prompt_template= prompt_starter)
     return session
 

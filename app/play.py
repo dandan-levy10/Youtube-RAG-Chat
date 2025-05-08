@@ -17,4 +17,4 @@ if __name__ == "__main__":
     # summary = summarise_documents(chunks)
     # length_function(chunks)
     session = create_chat_session()
-    session.ask("Who is the interviewee?")
+    session.ask("What are the guests views on the Trump administration?")
