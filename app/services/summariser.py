@@ -36,14 +36,11 @@ def length_function(documents: list[Document]) -> int:
 
 SUMMARY_CACHE_DIR = Path(__file__).parent.parent / "summary_cache"
 SUMMARY_CACHE_DIR.mkdir(exist_ok=True)
-TRANSCRIPT_CACHE_DIR =Path(__file__).parent.parent / "transcript_cache"
-TRANSCRIPT_CACHE_DIR.mkdir(exist_ok=True)
 
-def summarise_ingest(video_url: str, summary_cache_dir: Path = SUMMARY_CACHE_DIR, transcript_cache_dir: Path = TRANSCRIPT_CACHE_DIR) -> str:
+def summarise_ingest(video_url: str, summary_cache_dir: Path = SUMMARY_CACHE_DIR) -> str:
     video_id = extract_video_id(video_url)
     summary_cache_dir.mkdir(parents=True, exist_ok=True) 
     summary_cache_path = summary_cache_dir / f"{video_id}.json"
-    # transcript_cache_path = transcript_cache_dir / f"{video_id}.json"
     
     if summary_cache_path.exists():
         try:
@@ -56,13 +53,16 @@ def summarise_ingest(video_url: str, summary_cache_dir: Path = SUMMARY_CACHE_DIR
             logger.debug(f"Summary sample: {summary[:200]}")
             return summary
     
-    else:
-        logger.debug("Summary not found in cache, retrieving transcript to summarise")
-        docs = get_transcript(video_url=video_url) # Searches for cached transcript, otherwise downloads it
-        summary = summarise_documents(docs)
-        serializable = {"summary": summary, "metadata":docs[0].metadata}
-        tmp = summary_cache_path.with_suffix(".json.tmp")
-        tmp.write_text(json.dumps(serializable))
-        tmp.replace(summary_cache_path)
-        logger.info(f"Cached summary at {summary_cache_path}")
-        return summary
+    # Either cache didn't exist or was corrupted -> get transcript & make new summary
+    logger.debug("Summary not found in cache, retrieving transcript to summarise")
+    docs = get_transcript(video_url=video_url) # Searches for cached transcript, otherwise downloads it
+    summary = summarise_documents(docs)
+    serial = {"summary": summary, "metadata":docs[0].metadata}
+
+    # Atomic write
+    tmp = summary_cache_path.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(serial, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp.replace(summary_cache_path)
+    logger.info(f"Cached summary at {summary_cache_path}")
+
+    return summary
