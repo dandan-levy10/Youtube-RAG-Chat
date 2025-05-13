@@ -1,6 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, HttpUrl
 
-class SummaryOut(BaseModel):
+class SummaryRequest(BaseModel):
+    video_url: HttpUrl
+
+class SummaryResponse(BaseModel):
     video_id: str
     summary: str
 
