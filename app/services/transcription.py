@@ -3,6 +3,7 @@ from pathlib import Path
 from langchain_community.document_loaders import YoutubeLoader
 from yt_dlp import YoutubeDL # for metadata
 from langchain.schema import Document
+from urllib.parse import urlparse, parse_qs
 import logging
 from app.core.logging_setup import setup_logging
 
@@ -14,7 +15,14 @@ logger = logging.getLogger(__name__)
 CACHE_DIR = Path(__file__).parent.parent / "transcript_cache"
 CACHE_DIR.mkdir(exist_ok=True)
 
-# from urllib.parse import urlparse, parse_qs
+
+def extract_video_id(video_url: str) -> str | None:
+    parsed = urlparse(video_url)
+    # youtu.be/XYZ
+    if parsed.netloc.endswith("youtu.be"):
+        return parsed.path.lstrip("/")
+    # youtube.com/watch?v=XYZ
+    return parse_qs(parsed.query).get("v", [None])[0]
 
 # def clean_youtube_url(url: str) -> str:
 #     p = urlparse(url)
@@ -23,7 +31,7 @@ CACHE_DIR.mkdir(exist_ok=True)
 #     return f"https://www.youtube.com/watch?v={vid}" if vid else url
 
 def get_transcript(video_url: str) -> list[Document]:
-    video_id = video_url.split("v=")[-1]
+    video_id = extract_video_id(video_url)
     cache_path = CACHE_DIR / f"{video_id}.json"
     if cache_path.exists():
         data = json.loads(cache_path.read_text())
@@ -56,4 +64,4 @@ def get_transcript(video_url: str) -> list[Document]:
 
 if __name__ == "__main__":
     logger = logging.getLogger(__name__)
-    get_transcript("https://www.youtube.com/watch?v=ZrK3L0IXb9c&ab_channel=TechWithTim")
+    get_transcript(video_url="https://www.youtube.com/watch?v=ZrK3L0IXb9c&ab_channel=TechWithTim")
