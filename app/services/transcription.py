@@ -20,9 +20,16 @@ def extract_video_id(video_url: str) -> str | None:
     parsed = urlparse(video_url)
     # youtu.be/XYZ
     if parsed.netloc.endswith("youtu.be"):
-        return parsed.path.lstrip("/")
+        video_id = parsed.path.lstrip("/")
     # youtube.com/watch?v=XYZ
-    return parse_qs(parsed.query).get("v", [None])[0]
+    else: 
+        video_id = parse_qs(parsed.query).get("v", [None])[0]
+
+    if not video_id:
+        logger.error(f"Failed to extract video_id from URL: {video_url}")
+        raise ValueError(f"Invalid Youtube URL, could not parse video_id: {video_url}")
+
+    return video_id
 
 # def clean_youtube_url(url: str) -> str:
 #     p = urlparse(url)
