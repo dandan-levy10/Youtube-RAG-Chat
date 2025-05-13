@@ -9,6 +9,7 @@
 chess_chroma_db/
 
 transcript_cache/
+summary_cache/
 
 # trialling files
 chromadb-test.ipynb
