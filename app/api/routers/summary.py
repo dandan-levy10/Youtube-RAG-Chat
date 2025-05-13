@@ -11,8 +11,9 @@ router = APIRouter(
 
 @router.post("/", response_model=SummaryResponse)
 async def summarise_endpoint(request: SummaryRequest):
+    video_url: str = str(request.video_url)
     try:
-        summary_text = summarise_ingest(request.video_url)
+        summary_text = summarise_ingest(video_url)
     except Exception as e:
         raise HTTPException(status_code=500, detail= str(e))
     video_id = extract_video_id(request.video_url)

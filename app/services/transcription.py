@@ -4,6 +4,7 @@ from langchain_community.document_loaders import YoutubeLoader
 from yt_dlp import YoutubeDL # for metadata
 from langchain.schema import Document
 from urllib.parse import urlparse, parse_qs
+from pydantic import HttpUrl
 import logging
 from app.core.logging_setup import setup_logging
 
@@ -16,7 +17,10 @@ CACHE_DIR = Path(__file__).parent.parent / "transcript_cache"
 CACHE_DIR.mkdir(exist_ok=True)
 
 
-def extract_video_id(video_url: str) -> str | None:
+def extract_video_id(video_url: HttpUrl) -> str | None:
+    # Normalise to a build-in str
+    video_url = str(video_url)
+    
     parsed = urlparse(video_url)
     # youtu.be/XYZ
     if parsed.netloc.endswith("youtu.be"):

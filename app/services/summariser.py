@@ -1,12 +1,11 @@
 from langchain_ollama import OllamaLLM
 from langchain.chains.summarize import load_summarize_chain
 from langchain_core.documents import Document
-from app.models.schemas import SummaryOut
 import logging
 from pathlib import Path
 import json
 
-from transcription import get_transcript, extract_video_id
+from app.services.transcription import get_transcript, extract_video_id
 
 logger = logging.getLogger(__name__)
 
