@@ -25,7 +25,7 @@ class ChatMemory:
         return "\n\n".join(history)
 
 class TranscriptRetriever:
-    def __init__(self, vector_store: VectorStore, embedding_fn, k=4): # TODO: remove embedding_fn if not needed
+    def __init__(self, vector_store: VectorStore, k=4): 
         self.retriever = vector_store.as_retriever(
             search_type= "mmr",
             search_kwargs={"k":k}
@@ -85,7 +85,7 @@ class ChatSession:
 
         # 4) Update memory
         self.memory.append(user_message=question, assistant_message=answer)
-        
+
         return answer
 
 
