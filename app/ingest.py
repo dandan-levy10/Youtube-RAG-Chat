@@ -4,8 +4,6 @@ from app.services.embedding import embed_and_save
 from app.services.summariser import summarise_documents, length_function
 
 
-def ingest()
-
 if __name__ == "__main__":
     docs = get_transcript("https://www.youtube.com/watch?v=C4P3XSySBC8&t=3265s&ab_channel=TheFreePress")
     chunks = chunk_documents(documents=docs, chunk_size=500,chunk_overlap=50)
