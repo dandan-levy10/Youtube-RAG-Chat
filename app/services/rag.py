@@ -77,12 +77,16 @@ class ChatSession:
         prompt = "\n".join(prompt_blocks)
         logger.debug(f"Prompt: {prompt}")
 
-        # 3) Call your LLM
-        answer = self.llm.generate([prompt])
-        logger.info(f"LLM called. Answer: {answer}")
+        # 3) Call the LLM
+        result = self.llm.generate([prompt])
+        logger.info(f"LLM called. Answer: {result}")
+        answer = result.generations[0][0].text
+        logger.info(f"LLM answer text: {answer}")
 
         # 4) Update memory
         self.memory.append(user_message=question, assistant_message=answer)
+        
+        return answer
 
 
 prompt_starter = "You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise."

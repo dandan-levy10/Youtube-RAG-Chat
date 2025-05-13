@@ -1,6 +1,6 @@
 from app.core.logging_setup import setup_logging
-from fastapi import FastAPI
 from app.api.routers.summary import router as summary_router
+from fastapi import FastAPI
 
 app = FastAPI(
     title="Youtube RAG Chat",
