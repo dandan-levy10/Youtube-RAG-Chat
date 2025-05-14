@@ -105,15 +105,18 @@ def create_chat_session():
         embedding_function= embedding_function,
         persist_directory="app/chroma_db"
         )
-    retriever = TranscriptRetriever(vector_store=vectordb, embedding_fn=embedding_function, k=6)
+    retriever = TranscriptRetriever(vector_store=vectordb, k=6)
     llm       = OllamaLLM(model="llama3.2")
 
     # (2) create a session
     session = ChatSession(llm=llm, vectordb=vectordb, retriever=retriever, memory=memory, prompt_template= prompt_starter)
+    logger.debug("Chat session created.")
     return session
 
 def has_documents_for(video_id: str, vectordb) -> bool:
-    return bool(vectordb.get(filter={"video_id": video_id}))
+    col = vectordb._collection
+    result = col.get(where={"video_id": video_id}, limit=1)
+    return len(result["documents"]) > 0
 
 def history_to_prompt(history: list[tuple[str,str]]):
     history = [f"User: {u}\n Assistant: {a}" for u, a in history]

@@ -1,5 +1,6 @@
 from app.core.logging_setup import setup_logging
 from app.api.routers.summary import router as summary_router
+from app.api.routers.chat import router as chat_router
 from fastapi import FastAPI
 
 app = FastAPI(
@@ -9,6 +10,7 @@ app = FastAPI(
 
 # mount router under /api
 app.include_router(summary_router, prefix="/api")
+app.include_router(chat_router, prefix="/api")
 
 
 if __name__ == "__main__":

@@ -10,6 +10,9 @@ from app.services.rag import rag_chat_service
 from app.models.schemas import ChatRequest, ChatResponse
 from app.services.transcription import extract_video_id
 
+print("🟢 chat.py router loaded")
+
+
 logger = logging.getLogger(__name__)
 
 def get_redis():
@@ -57,12 +60,13 @@ async def chat_endpoint(
     # Perform RAG QA call
     try:
         answer = rag_chat_service(
-            video_url=request.video_url,
+            video_url=str(request.video_url),
             question=request.question,
             history=history
             )
     except Exception as e:
-        HTTPException(status_code=502, detail=str(e))
+        logger.exception("❌ rag_chat_service failed")
+        raise HTTPException(status_code=502, detail=str(e)) from e
 
     # Upload Q&A to redis
     await redis.rpush(history_key, json.dumps([request.question, answer]))
