@@ -26,7 +26,15 @@ def embed_and_save(documents):
         persist_directory="app/chroma_db"
         )
     logger.info(f"Connected to ChromaDB {vectordb._persist_directory}")
+
+    # extract the raw text and any existing metadata
+    # texts    = [doc.page_content for doc in documents]
+    metas    = [doc.metadata for doc in documents]
+    ids      = [f"{doc.metadata["video_id"]}-{i}" for i, doc in enumerate(documents)]
     
-    vectordb.add_documents(documents)
+    vectordb.add_documents(
+        documents=documents,
+        metadata = metas,
+        ids=ids)
     logger.info(f"Added {len(documents)} documents to {vectordb._persist_directory}")
     # vectordb.persist()

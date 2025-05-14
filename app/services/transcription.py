@@ -33,7 +33,7 @@ def extract_video_id(video_url: HttpUrl) -> str | None:
         logger.error(f"Failed to extract video_id from URL: {video_url}")
         raise ValueError(f"Invalid Youtube URL, could not parse video_id: {video_url}")
 
-    return video_id
+    return str(video_id)
 
 # def clean_youtube_url(url: str) -> str:
 #     p = urlparse(url)
@@ -67,6 +67,7 @@ def get_transcript(video_url: str) -> list[Document]:
         doc.metadata["title"] = info.get("title")
         doc.metadata["uploader"] = info.get("uploader")
         doc.metadata["upload_date"] = info.get("upload_date")
+        doc.metadata["video_id"] = video_id
 
     serializable = [{"page_content": doc.page_content, "metadata": doc.metadata} for doc in docs]
     cache_path.write_text(json.dumps(serializable))

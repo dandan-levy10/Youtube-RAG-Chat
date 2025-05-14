@@ -30,16 +30,24 @@ class ChatMemory:
 
 class TranscriptRetriever:
     def __init__(self, vector_store: VectorStore, k=4): 
-        self.retriever = vector_store.as_retriever(
-            search_type= "mmr",
-            search_kwargs={"k":k}
-        )
-        logger.info(f"Initialised TranscriptReciever with vector store {vector_store.__repr__}, {k} retrival context chunks")
+        self.vector_store = vector_store 
+        self.k = k
+        # retriever = vector_store.as_retriever(
+        #     search_type= "mmr",
+        #     search_kwargs={"k":k}
+        # )
+        # logger.info(f"Initialised TranscriptReciever with vector store {vector_store.__repr__}, {k} retrival context chunks")
 
-    def get_context(self, query: str) -> str:
+    def get_context(self, query: str, video_id: str) -> str:
         logger.debug(f"get_context received query of type {type(query)}, {query}")
         try:
-            results = self.retriever.get_relevant_documents(query=query)
+            retriever = self.vector_store.as_retriever(
+                search_kwargs={
+                    "k": self.k,
+                    "filter": {"video_id": video_id}
+                }
+            )
+            results = retriever.get_relevant_documents(query=query)
         except Exception:
             logger.error("Failed calling get_relevant_documents with query=%r", query, exc_info=True)
             raise
@@ -58,9 +66,9 @@ class ChatSession:
         self.prompt_template = prompt_template
         logger.debug(f"ChatSession initialised with {llm.__str__}, retriever {retriever.__str__}, memory {memory.__str__}")
 
-    def ask(self, question: str, history: list[tuple[str,str]]) -> str:
+    def ask(self, question: str, history: list[tuple[str,str]], video_id: str) -> str:
         # 1) Retrieve context
-        context = self.retriever.get_context(query = question)
+        context = self.retriever.get_context(query = question, video_id= video_id)
 
         # logger.debug(f"Excerpt: {context}")
 
@@ -136,5 +144,5 @@ def rag_chat_service(video_url: str, question: str, history: list[tuple[str,str]
         # embed chunks, upload to vectordb
         embed_and_save(chunks)
     
-    answer = session.ask(question=question, history = history)
+    answer = session.ask(question=question, history = history, video_id=video_id)
     return answer

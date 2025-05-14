@@ -4,7 +4,7 @@ from pathlib import Path
 
 LOG_FILE = Path("app") / "app.log"
 
-def setup_logging(level: int = logging.INFO):
+def setup_logging(level: int = logging.DEBUG):
     LOGGING_CONFIG = {
         "version": 1,
         "disable_existing_loggers": False,
