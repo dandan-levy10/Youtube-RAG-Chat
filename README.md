@@ -14,7 +14,7 @@ A FastAPI backend for on-demand summarization and RAG-style chat over YouTube vi
 
 ### Repository Structure
 
-your_project/
+Youtube-RAG-Chat/
 ├── app/
 │   ├── main.py            # FastAPI app entrypoint
 │   ├── core/
@@ -39,9 +39,10 @@ your_project/
 ### Setup
 Clone & install
 
-git clone https://github.com/yourusername/your_project.git
-cd your_project
-pip install -r requirements.txt
+git clone https://github.com/dandan-levy10/Youtube-RAG-Chat.git
+cd Youtube-RAG-Chat
+conda env create -f environment.yml
+conda activate Youtube-RAG-Chat
 
 
 ### Environment

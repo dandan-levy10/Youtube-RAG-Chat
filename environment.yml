@@ -1,4 +1,4 @@
-name: chromadb-test
+name: Youtube-RAG-Chat
 channels:
   - defaults
   - https://repo.anaconda.com/pkgs/main
