@@ -4,6 +4,10 @@ from langchain.vectorstores import VectorStore
 from langchain_chroma.vectorstores import Chroma
 import logging
 
+from app.services.transcription import get_transcript, extract_video_id
+from app.services.chunking import chunk_documents
+from app.services.embedding import embed_and_save
+
 logger = logging.getLogger(__name__)
 
 class ChatMemory:
@@ -13,7 +17,7 @@ class ChatMemory:
 
     def append(self, user_message: str, assistant_message: str):
         self.buffer.append((user_message, assistant_message))
-        logger.debug(f"Appended (user_message, assistant_message) tumple to memory")
+        logger.debug(f"Appended (user_message, assistant_message) tuple to memory")
 
         if len(self.buffer) > self.max_turns:
             self.buffer.pop(0)
@@ -46,14 +50,15 @@ class TranscriptRetriever:
         return context
         
 class ChatSession:
-    def __init__(self, llm, retriever: TranscriptRetriever, memory: ChatMemory, prompt_template: str):
+    def __init__(self, llm, vectordb, retriever: TranscriptRetriever, memory: ChatMemory, prompt_template: str):
         self.llm = llm
+        self.vectorstore = vectordb
         self.retriever = retriever
         self.memory = memory
         self.prompt_template = prompt_template
         logger.debug(f"ChatSession initialised with {llm.__str__}, retriever {retriever.__str__}, memory {memory.__str__}")
 
-    def ask(self, question: str) -> str:
+    def ask(self, question: str, history: list[tuple[str,str]]) -> str:
         # 1) Retrieve context
         context = self.retriever.get_context(query = question)
 
@@ -64,7 +69,8 @@ class ChatSession:
 
         prompt_blocks.append(self.prompt_template)
         
-        history = self.memory.to_prompt()
+        history = history_to_prompt(history)
+
         if history:
             prompt_blocks.append(history)
 
@@ -79,12 +85,12 @@ class ChatSession:
 
         # 3) Call the LLM
         result = self.llm.generate([prompt])
-        logger.info(f"LLM called. Answer: {result}")
+        logger.info(f"LLM called. Result: {result}")
         answer = result.generations[0][0].text
         logger.info(f"LLM answer text: {answer}")
 
         # 4) Update memory
-        self.memory.append(user_message=question, assistant_message=answer)
+        # self.memory.append(user_message=question, assistant_message=answer)
 
         return answer
 
@@ -103,6 +109,29 @@ def create_chat_session():
     llm       = OllamaLLM(model="llama3.2")
 
     # (2) create a session
-    session = ChatSession(llm=llm, retriever=retriever, memory=memory, prompt_template= prompt_starter)
+    session = ChatSession(llm=llm, vectordb=vectordb, retriever=retriever, memory=memory, prompt_template= prompt_starter)
     return session
 
+def has_documents_for(video_id: str, vectordb) -> bool:
+    return bool(vectordb.get(filter={"video_id": video_id}))
+
+def history_to_prompt(history: list[tuple[str,str]]):
+    history = [f"User: {u}\n Assistant: {a}" for u, a in history]
+    return "\n\n".join(history)
+
+def rag_chat_service(video_url: str, question: str, history: list[tuple[str,str]]) -> str:
+    # extract video_id
+    video_id = extract_video_id(video_url=video_url)
+    # create chat session
+    session = create_chat_session()
+    # if not video_id exists in vectordb
+    if not has_documents_for(video_id=video_id, vectordb=session.vectorstore):
+        # retrieve transcript
+        documents = get_transcript(video_url=video_url)
+        # chunk transcript
+        chunks = chunk_documents(documents, chunk_size= 800, chunk_overlap= 50)
+        # embed chunks, upload to vectordb
+        embed_and_save(chunks)
+    
+    answer = session.ask(question=question, history = history)
+    return answer
