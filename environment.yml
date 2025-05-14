@@ -1,4 +1,4 @@
-name: Youtube-RAG-Chat
+name: chromadb-test
 channels:
   - defaults
   - https://repo.anaconda.com/pkgs/main
@@ -9,4 +9,5 @@ dependencies:
   - pytorch
   - openblas
   - ipywidgets
+  - pytest
 prefix: /opt/anaconda3/envs/chromadb-test
