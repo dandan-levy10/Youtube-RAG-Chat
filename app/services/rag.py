@@ -103,7 +103,7 @@ class ChatSession:
         return answer
 
 
-prompt_starter = "You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise."
+prompt_starter = "You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If the context provided doesn't provide an answer to the question, just say that you don't know. Use three sentences maximum and keep the answer concise."
 
 def create_chat_session():
     # (1) instantiate your pieces

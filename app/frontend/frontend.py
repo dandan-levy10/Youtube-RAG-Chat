@@ -35,7 +35,7 @@ def fetch_chat(video_url: str, question: str) -> str:
     # if "session_id" in st.session_state:
     #     payload["session_id"] = str(st.session_state.session_id)
     response = api.post(f"{API_BASE}/chat", json=payload)
-    response.raise_for_status
+    response.raise_for_status()
     return response.json()["answer"]
 
 # Build the UI
@@ -58,23 +58,22 @@ if "video_url" not in st.session_state:
 else:
     st.subheader("Summary")
     st.write(st.session_state.summary)
-
-    # Chat input
-    st.subheader(body="Ask a question about the video")
-    question = st.text_input("Your question here:")
-    if st.button("Send"):
-        answer = fetch_chat(video_url=st.session_state.video_url, question=question)
-        st.session_state.chat_history.append((question, answer))
-
+    
+    st.subheader("Conversation")
     # Render the chat history
     for user_q, bot_a in st.session_state.chat_history:
         st.markdown(f"**You:** {user_q}")
         st.markdown(f"**Bot:** {bot_a}")
     
+    # Chat input
+    st.subheader(body="Ask a question about the video")
+    question = st.text_input("Your question here:", key="user_question")
+    if st.button("Send") and st.session_state.user_question.strip():
+        answer = fetch_chat(video_url=st.session_state.video_url, question=question)
+        st.session_state.chat_history.append((question, answer))
+        st.session_state.user_question == ""
+
     if st.button("New video"):
         for key in ["video_url", "summary", "chat_history", "session_id"]:
             st.session_state.pop(key)
 
-
-text_area = st.text_area(label="alright geez",placeholder="yeah good mate")
-# st.chat_input(placeholder="Enter video url", on_submit=st.balloons())
