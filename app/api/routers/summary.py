@@ -5,7 +5,7 @@ from app.services.transcription import extract_video_id
 from app.models.schemas import SummaryRequest, SummaryResponse
 
 router = APIRouter(
-    prefix="/summarize",
+    prefix="/summarise",
     tags=["summaries"]
 )
 
