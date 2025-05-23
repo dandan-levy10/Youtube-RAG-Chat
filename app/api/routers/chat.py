@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Response, Cookie
-from pydantic import BaseModel, HttpUrl
-import redis
+from sqlmodel import Session
+# from pydantic import BaseModel, HttpUrl
+# import redis
 import redis.asyncio as aioredis
 from uuid import uuid4
 import json
@@ -9,6 +10,8 @@ import logging
 from app.services.rag import rag_chat_service
 from app.models.schemas import ChatRequest, ChatResponse
 from app.services.transcription import extract_video_id
+from db.session import get_session
+from db.crud import load_history, save_message
 
 print("🟢 chat.py router loaded")
 
@@ -29,33 +32,34 @@ router = APIRouter(
 async def chat_endpoint(
     request: ChatRequest,
     response: Response,
-    redis = Depends(get_redis),
-    session_id: str | None = Cookie(default=None)
+    db: Session = Depends(get_session),
+    user_id: str | None = Cookie(default=None)
     ):
     # retrieve or create session_id
-    if session_id is None:
-        session_id = str(uuid4())
-        logger.debug(f"Created a new UUID: {session_id}")
+    if user_id is None:
+        user_id = str(uuid4())
+        logger.debug(f"Created a new UUID: {user_id}")
         response.set_cookie(
-            key="session_id",
-            value=session_id,
+            key="user_id",
+            value=user_id,
             httponly=True,
             max_age=3600,
             samesite="strict",
             secure=True,
             path="/"
         )
-        logger.debug(f"Set cookie in response")
+        logger.debug(f"Assigned and set new user_id cookie: {user_id}")
     
     video_id = extract_video_id(request.video_url)
-    # Load history from Redis using session_id + video_id
-    history_key = f"chat:{session_id}:{video_id}:history"
-    raw = await redis.lrange(history_key, 0, -1) # Get all results matching key
-    history = [json.loads(x) for x in raw] # Deserialise 
+    
+    # Load history from SQL DB 
+    history = load_history(db, user_id, video_id)   # retrieves List[ChatMessage]
+    history = [(item.question, item.answer) for item in history]
+
     if not history:
-        logger.debug("Cache miss. History empty")
+        logger.debug("DB miss. History empty")
     else:
-        logger.debug(f"Cache hit. History: {history}")
+        logger.debug(f"DB hit. History: {history}")
 
     # Perform RAG QA call
     try:
@@ -68,9 +72,8 @@ async def chat_endpoint(
         logger.exception("❌ rag_chat_service failed")
         raise HTTPException(status_code=502, detail=str(e)) from e
 
-    # Upload Q&A to redis
-    await redis.rpush(history_key, json.dumps([request.question, answer]))
-    await redis.expire(history_key, 3600)
+    # # Save Q&A DB
+    save_message(db, request.question, answer, video_id, user_id)
 
     return ChatResponse(answer=answer)
 
