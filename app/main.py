@@ -3,10 +3,24 @@ from app.api.routers.summary import router as summary_router
 from app.api.routers.chat import router as chat_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+from sqlmodel import SQLModel
+from db.session import engine
+
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Before startup:
+    SQLModel.metadata.create_all(engine) # Create all tables
+    yield
+    # After startup:
+
 
 app = FastAPI(
     title="Youtube RAG Chat",
-    version= "0.1.0"
+    version= "0.1.0",
+    lifespan=lifespan
 )
 
 app.add_middleware(
