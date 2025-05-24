@@ -1,10 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Response, Cookie
 from sqlmodel import Session
-# from pydantic import BaseModel, HttpUrl
-# import redis
-import redis.asyncio as aioredis
 from uuid import uuid4
-import json
 import logging
 
 from app.services.rag import rag_chat_service
@@ -18,10 +14,6 @@ print("🟢 chat.py router loaded")
 
 logger = logging.getLogger(__name__)
 
-def get_redis():
-    # FastAPI dependency that returns singleton Redis Client
-    return aioredis.from_url("redis://localhost:6379/0")
-
 
 router = APIRouter(
     prefix = "/chat",
@@ -29,7 +21,7 @@ router = APIRouter(
 )
 
 @router.post("/", response_model=ChatResponse)
-async def chat_endpoint(
+def chat_endpoint(
     request: ChatRequest,
     response: Response,
     db: Session = Depends(get_session),
@@ -45,7 +37,7 @@ async def chat_endpoint(
             httponly=True,
             max_age=3600,
             samesite="strict",
-            secure=True,
+            secure=False,
             path="/"
         )
         logger.debug(f"Assigned and set new user_id cookie: {user_id}")
