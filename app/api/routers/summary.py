@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, HttpUrl
+from fastapi import APIRouter, HTTPException, Depends
 from app.services.summariser import summarise_ingest
 from app.services.transcription import extract_video_id
 from app.models.schemas import SummaryRequest, SummaryResponse
+from db.session import get_session
+from sqlmodel import Session
 
 router = APIRouter(
     prefix="/summarise",
@@ -10,10 +11,10 @@ router = APIRouter(
 )
 
 @router.post("/", response_model=SummaryResponse)
-async def summarise_endpoint(request: SummaryRequest):
+async def summarise_endpoint(request: SummaryRequest, db: Session = Depends(get_session)):
     video_url: str = str(request.video_url)
     try:
-        summary_text = summarise_ingest(video_url)
+        summary_text = summarise_ingest(video_url, db)
     except Exception as e:
         raise HTTPException(status_code=500, detail= str(e))
     video_id = extract_video_id(request.video_url)

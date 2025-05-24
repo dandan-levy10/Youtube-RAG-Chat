@@ -1,6 +1,9 @@
 from sqlmodel import Session, select
 from db.models import ChatMessage, Summary, Transcript
 from typing import List
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # ChatMessage table:
@@ -28,9 +31,8 @@ def save_summary(db: Session, video_id: str, title: str, summary: str, metadata:
     db.refresh(summary)
     return summary
 
-def load_summary(db: Session, video_id: str) -> Summary:
-    statement = select(Summary).where(Summary.video_id == video_id)
-    return db.exec(statement).all()
+def load_summary(db: Session, video_id: str) -> Summary | None:
+    return db.get(Summary, video_id)
 
 # Transcript table:
 
@@ -41,6 +43,5 @@ def save_transcript(db: Session, video_id: str, title: str, transcript: str, met
     db.refresh(transcript)
     return transcript
 
-def load_transcript(db: Session, video_id: str) -> Transcript:
-    statement = select(Transcript).where(video_id==video_id)
-    return db.exec(statement).all()
+def load_transcript(db: Session, video_id: str) -> Transcript | None:
+    return db.get(Transcript, video_id)

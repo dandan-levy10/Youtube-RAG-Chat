@@ -1,20 +1,20 @@
 import json
-from pathlib import Path
 from langchain_community.document_loaders import YoutubeLoader
 from yt_dlp import YoutubeDL # for metadata
 from langchain.schema import Document
 from urllib.parse import urlparse, parse_qs
 from pydantic import HttpUrl
+from sqlmodel import Session
 import logging
-from app.core.logging_setup import setup_logging
 
+from app.core.logging_setup import setup_logging
+from db.crud import load_transcript, save_transcript
+from db.session import get_session
+
+# Set up logger
 setup_logging()
 
 logger = logging.getLogger(__name__)
-
-
-CACHE_DIR = Path(__file__).parent.parent / "transcript_cache"
-CACHE_DIR.mkdir(exist_ok=True)
 
 
 def extract_video_id(video_url: HttpUrl) -> str | None:
@@ -35,27 +35,22 @@ def extract_video_id(video_url: HttpUrl) -> str | None:
 
     return str(video_id)
 
-# def clean_youtube_url(url: str) -> str:
-#     p = urlparse(url)
-#     params = parse_qs(p.query)
-#     vid = params.get("v", [None])[0]
-#     return f"https://www.youtube.com/watch?v={vid}" if vid else url
 
-def get_transcript(video_url: str) -> list[Document]:
+def get_transcript(video_url: str, db: Session) -> list[Document]:
     video_id = extract_video_id(video_url)
-    cache_path = CACHE_DIR / f"{video_id}.json"
-    if cache_path.exists():
-        data = json.loads(cache_path.read_text())
-        docs = [Document(metadata = doc["metadata"], page_content= doc["page_content"]) for doc in data]
-        logger.info(f"Successfully retrieved transcript for video '{docs[0].metadata["title"]}' (id: {video_id}) from cache.")
-        logger.debug(f"Document sample: {docs[0].page_content[:200]}")
-
-        return docs
+    
+    # Try loading the existing record
+    cache = load_transcript(db, video_id)
+    if cache is not None:
+        documents = [Document(metadata = cache.metadata, page_content=cache.transcript)] # Single-item List[Document]
+        return documents
+    
+    # Otherwise download transcript fresh:
 
     # Load transcript only
     loader = YoutubeLoader.from_youtube_url(video_url)
     docs = loader.load()
-    logger.info("Downloaded transcript for video {video_id} from Langchain YoutubeLoader")
+    logger.info(f"Downloaded transcript for video {video_id} from Langchain YoutubeLoader")
 
     # fetch video metadata via yt-dlp
     ydl_opts = {"quiet": True, "skip_download": True}
@@ -63,16 +58,31 @@ def get_transcript(video_url: str) -> list[Document]:
         info = ydl.extract_info(video_url, download=False) # get metadata, don't dl video/audio
     logger.info(f"Downloaded {info.get("title")} video metadata from yt-dlp")
 
+    # Add information to documents' metadata
     for doc in docs:
-        doc.metadata["title"] = info.get("title")
-        doc.metadata["uploader"] = info.get("uploader")
-        doc.metadata["upload_date"] = info.get("upload_date")
-        doc.metadata["video_id"] = video_id
+        doc.metadata.update({
+            "title":       info.get("title"),
+            "uploader":    info.get("uploader"),
+            "upload_date": info.get("upload_date"),
+            "video_id":    video_id,
+        })
 
-    serializable = [{"page_content": doc.page_content, "metadata": doc.metadata} for doc in docs]
-    cache_path.write_text(json.dumps(serializable))
-    logger.debug(f"Document sample: {docs[0].page_content[:200]}")
+    # In case chunked documents returned, combine into one full transcript text
+    full_text = "\n\n".join(doc.page_content for doc in docs)
+    metadata = docs[0].metadata
+    
+    # Save the transcript to db
+    save_transcript(
+        db, 
+        video_id, 
+        title=metadata["title"], 
+        transcript=full_text, 
+        metadata=metadata
+        )
+    
+    # Return List[Document]
     return docs
+
 
 if __name__ == "__main__":
     logger = logging.getLogger(__name__)
