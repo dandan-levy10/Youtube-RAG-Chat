@@ -1,4 +1,3 @@
-import json
 from langchain_community.document_loaders import YoutubeLoader
 from yt_dlp import YoutubeDL # for metadata
 from langchain.schema import Document
@@ -9,7 +8,7 @@ import logging
 
 from app.core.logging_setup import setup_logging
 from db.crud import load_transcript, save_transcript
-from db.session import get_session
+
 
 # Set up logger
 setup_logging()
@@ -37,18 +36,28 @@ def extract_video_id(video_url: HttpUrl) -> str | None:
 
 
 def get_transcript(video_url: str, db: Session) -> list[Document]:
+    """
+    Return a list of Document chunks for this video.
+    - If cached in the DB, wraps that single transcript in one Document.
+    - Otherwise, downloads via YoutubeLoader, enriches metadata,
+      saves the full transcript in the DB, and returns the raw chunks.
+    """
+
     video_id = extract_video_id(video_url)
+    clean_url = f"https://www.youtube.com/watch?v={video_id}"
     
     # Try loading the existing record
     cache = load_transcript(db, video_id)
     if cache is not None:
-        documents = [Document(metadata = cache.metadata, page_content=cache.transcript)] # Single-item List[Document]
+        documents = [Document(
+            metadata = cache.doc_metadata or {}, 
+            page_content=cache.transcript)] # Single-item List[Document]
         return documents
     
     # Otherwise download transcript fresh:
 
     # Load transcript only
-    loader = YoutubeLoader.from_youtube_url(video_url)
+    loader = YoutubeLoader.from_youtube_url(clean_url)
     docs = loader.load()
     logger.info(f"Downloaded transcript for video {video_id} from Langchain YoutubeLoader")
 
@@ -59,13 +68,15 @@ def get_transcript(video_url: str, db: Session) -> list[Document]:
     logger.info(f"Downloaded {info.get("title")} video metadata from yt-dlp")
 
     # Add information to documents' metadata
-    for doc in docs:
-        doc.metadata.update({
+    base_meta = {
             "title":       info.get("title"),
             "uploader":    info.get("uploader"),
             "upload_date": info.get("upload_date"),
             "video_id":    video_id,
-        })
+        }
+    
+    for doc in docs:
+        doc.metadata.update(base_meta)
 
     # In case chunked documents returned, combine into one full transcript text
     full_text = "\n\n".join(doc.page_content for doc in docs)
@@ -73,8 +84,8 @@ def get_transcript(video_url: str, db: Session) -> list[Document]:
     
     # Save the transcript to db
     save_transcript(
-        db, 
-        video_id, 
+        db=db, 
+        video_id=video_id, 
         title=metadata["title"], 
         transcript=full_text, 
         metadata=metadata

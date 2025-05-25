@@ -45,7 +45,7 @@ def chat_endpoint(
     video_id = extract_video_id(request.video_url)
     
     # Load history from SQL DB 
-    history = load_history(db, user_id, video_id)   # retrieves List[ChatMessage]
+    history = load_history(db, user_id, video_id)   # Retrieves List[ChatMessage]
     history = [(item.question, item.answer) for item in history]
 
     if not history:

@@ -36,9 +36,6 @@ def length_function(documents: list[Document]) -> int:
     # logger.info(f"Max input size: {llm.max_input_size}")
     return length 
 
-SUMMARY_CACHE_DIR = Path(__file__).parent.parent / "summary_cache"
-SUMMARY_CACHE_DIR.mkdir(exist_ok=True)
-
 def summarise_ingest(video_url: str, db: Session) -> str:
     video_id = extract_video_id(video_url)
     
@@ -49,7 +46,7 @@ def summarise_ingest(video_url: str, db: Session) -> str:
     
     # Cache miss → generate new summary
     logger.debug("Summary not found in cache, retrieving transcript to summarise")
-    docs = get_transcript(video_url) # Searches for cached transcript, otherwise downloads it
+    docs = get_transcript(video_url, db) # Searches for cached transcript, otherwise downloads it
     new_summary = summarise_documents(docs)
     
     # Persist for next time:
