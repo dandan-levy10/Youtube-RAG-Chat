@@ -13,7 +13,7 @@ def save_message(db: Session, question: str, answer: str, video_id: str, user_id
     db.add(message)
     db.commit()
     db.refresh(message)
-    logger.debug(f"Successfully loaded history for video id {ChatMessage.video_id}.")
+    logger.debug(f"Successfully saved message for video id {video_id}.")
     return message
 
 def load_history(db: Session, user_id: str, video_id: str) -> List[ChatMessage]:
@@ -22,18 +22,21 @@ def load_history(db: Session, user_id: str, video_id: str) -> List[ChatMessage]:
         ChatMessage.video_id == video_id
     ).order_by(ChatMessage.created_at)
     history = db.exec(statement).all()
-    logger.debug(f"Successfully loaded history for video id {ChatMessage.video_id}.")
+    if history:
+        logger.debug(f"Successfully loaded history for video id {ChatMessage.video_id}.")
+    else:
+        logger.debug(f"No history found for video id {video_id}.")
     return history
 
 # Summary table:
 
 def save_summary(db: Session, video_id: str, title: str, summary: str, metadata: dict) -> Summary:
     summary = Summary(
-        video_id=video_id, 
-        title=title, 
-        summary=summary, 
+        video_id=video_id,
+        title=title,
+        summary=summary,
         doc_metadata=metadata
-        )
+    )
     db.add(summary)
     db.commit()
     db.refresh(summary)
@@ -51,7 +54,6 @@ def load_summary(db: Session, video_id: str) -> Summary | None:
 # Transcript table:
 
 def save_transcript(db: Session, video_id: str, title: str, transcript: str, metadata: dict) -> Transcript:
-    # transcript = Transcript(video_id, title, transcript, metadata)
     transcript = Transcript(
         video_id=video_id,
         title=title,

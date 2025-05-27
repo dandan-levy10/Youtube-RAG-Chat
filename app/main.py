@@ -1,13 +1,16 @@
-from app.core.logging_setup import setup_logging
+import logging
+from app.core.logging_setup import configure_logging
+# Set up logging
+configure_logging(level = 10)
+
 from app.api.routers.summary import router as summary_router
 from app.api.routers.chat import router as chat_router
+from db.session import engine
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from sqlmodel import SQLModel
-from db.session import engine
-
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -24,6 +27,9 @@ app = FastAPI(
     debug=True
 )
 
+# configure_logging(level=logging.DEBUG)
+# logging.getLogger("httpx").setLevel(logging.WARNING)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins = ["http://localhost:8501"], # Trust front-end on port 8501
@@ -38,4 +44,14 @@ app.include_router(chat_router, prefix="/api")
 
 
 if __name__ == "__main__":
-    setup_logging()
+    from app.core.logging_setup import configure_logging
+    import uvicorn
+    
+
+    uvicorn.run(
+        app="app.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_config=None
+    )
