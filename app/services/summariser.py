@@ -2,7 +2,6 @@ from langchain_ollama import OllamaLLM
 from langchain.chains.summarize import load_summarize_chain
 from langchain_core.documents import Document
 import logging
-from pathlib import Path
 from sqlmodel import Session
 
 from app.services.transcription import get_transcript, extract_video_id

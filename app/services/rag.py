@@ -53,7 +53,7 @@ class TranscriptRetriever:
             raise
 
         context = "\n\n".join(result.page_content for result in results)
-        logger.debug(f"TranscriptReciever.get_context called. Context: {context}")
+        logger.debug(f"TranscriptReciever.get_context called. Context: \n\n{context}")
 
         return context
         
@@ -95,7 +95,7 @@ class ChatSession:
         result = self.llm.generate([prompt])
         logger.info(f"LLM called. Result: {result}")
         answer = result.generations[0][0].text
-        logger.info(f"LLM answer text: {answer}")
+        # logger.info(f"LLM answer text: {answer}")
 
         # 4) Update memory
         # self.memory.append(user_message=question, assistant_message=answer)
