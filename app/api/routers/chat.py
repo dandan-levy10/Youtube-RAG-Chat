@@ -64,13 +64,6 @@ def chat_endpoint(
     except Exception as e:
         logger.exception("❌ rag_chat_service failed")
         raise HTTPException(status_code=502, detail=str(e)) from e
-    
-    # answer = rag_chat_service(
-    #         video_url=str(request.video_url),
-    #         question=request.question,
-    #         history=history,
-    #         db=db
-    #         )
 
     # # Save Q&A DB
     save_message(db, request.question, answer, video_id, user_id)
