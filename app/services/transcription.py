@@ -49,9 +49,12 @@ def get_transcript(video_url: str, db: Session) -> list[Document]:
     # Try loading the existing record
     cache = load_transcript(db, video_id)
     if cache is not None:
-        documents = [Document(
+        documents = [
+            Document(
             metadata = cache.doc_metadata or {}, 
-            page_content=cache.transcript)] # Single-item List[Document]
+            page_content=cache.transcript
+            )
+            ] # Single-item List[Document]
         return documents
     
     # Otherwise download transcript fresh:

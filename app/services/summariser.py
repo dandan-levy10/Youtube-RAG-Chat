@@ -5,7 +5,6 @@ import logging
 from sqlmodel import Session
 
 from app.services.transcription import get_transcript, extract_video_id
-from db.session import get_session
 from db.crud import load_summary, save_summary
 
 
