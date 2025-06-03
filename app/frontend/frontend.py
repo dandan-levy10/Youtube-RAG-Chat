@@ -1,6 +1,9 @@
 import streamlit as st
 import requests
 import json
+import logging
+
+logger = logging.getLogger()
 
 API_BASE = "http://localhost:8000/api"
 
@@ -17,8 +20,11 @@ def get_api_client():
 
 api = get_api_client()
 
+def update_side_panel():
+    response=api.get(f"{API_BASE}/previous_conversations/{st.user_id}")
+                     
 
-# Initialise input value keys
+# Initialise widget input value keys
 if "url_input_value" not in st.session_state:
     st.session_state.url_input_value = ""
 if "input_chat_message" not in st.session_state:
@@ -31,8 +37,49 @@ if "summary" not in st.session_state:
     st.session_state.summary = None
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
+if "user_id" not in st.session_state:
+    st.session_state.user_id = None
+if "past_conversations" not in st.session_state:
+    st.session_state.past_conversations = []
+if "session_initialised_flag" not in st.session_state:   # Flag to run init once per Streamlit session
+    st.session_state.session_initialised_flag = False
 
 # API-calling functions
+def app_initial_setup():
+    """
+    Called once per Streamlit session to initialize user_id
+    and load initial data like past conversations.
+    """
+
+    if st.session_state.session_initialised_flag:
+        return
+    
+    try:
+        logger.info("Attempting to initialise app session with backend...")
+        # POST request to the init endpoint
+        init_response = api.post(f"{API_BASE}/session/init")
+        init_response.raise_for_status    # Check for errors
+        session_data = init_response.json()
+
+        st.session_state.user_id = session_data.get("user_id")
+        st.session_state.session_initialised_flat = session_data.get("is_new_user", True)
+
+        if st.session_state.user_id:
+            logger.info("App session initalised. User ID: {st.session_state.user_id} (New User: {is_new_user})")
+            load_past_conversations()
+        else:
+            logger.warning("Session initialisation did not return a User ID")
+    except Exception as e:
+        logger.error(f"Error during app initial setup or loading past conversations: {e}", exc_info=True)
+        st.error("Could not initialise your session. Please refresh the page")
+    finally:
+        # Mark as initalised even if failed, to avoid a loop.
+        st.session_state.session_initialised_flag = True
+
+def load_past_conversations():
+    # TODO
+    pass
+
 def fetch_summary(video_url: str) -> str:
     payload = {"video_url": video_url}
     response = api.post(f"{API_BASE}/summarise", json=payload)
@@ -94,6 +141,9 @@ def handle_new_video_click():
     st.session_state.chat_history = []
 
 # -------- Build the UI ----------
+# Initialise the session, load previous chats for sidebar
+app_initial_setup()
+
 
 # Title
 st.title(body="Youtube RAG Chat")

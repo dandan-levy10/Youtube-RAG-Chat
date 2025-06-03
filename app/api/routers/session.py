@@ -8,7 +8,7 @@ logger = logging.getLogger()
 
 router = APIRouter()
 
-@router.get("/session/init", response_model=SessionInitData)
+@router.post("/session/init", response_model=SessionInitData)
 def initialise_session(
     response: Response,
     user_id_from_cookie: str | None = Cookie(None, alias="user_id") # Read existing cookie
