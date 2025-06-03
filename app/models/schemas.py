@@ -1,6 +1,4 @@
-from pydantic import BaseModel, HttpUrl, Field
-from typing import Optional
-from uuid import uuid4, UUID
+from pydantic import BaseModel, HttpUrl
 
 class SummaryRequest(BaseModel):
     video_url: HttpUrl
@@ -15,3 +13,10 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     answer: str
+
+class PreviousConversationsRequest(BaseModel):
+    user_id: str
+
+class PreviousConversationsResponse(BaseModel):
+    video_id: str
+    title: str

@@ -71,6 +71,4 @@ def chat_endpoint(
     return ChatResponse(answer=answer)
 
 
-
-    
-
+@router.get("/past_conversations", response_model=)

@@ -73,3 +73,15 @@ def load_transcript(db: Session, video_id: str) -> Transcript | None:
     else:
         logger.debug(f"Successfully loaded transcript for video {transcript.title}; video id {transcript.video_id}.")
     return transcript
+
+# Load video_id & title history from user_id (for side-panel)
+
+def get_video_ids_and_titles_by_user_id(db: Session, target_user_id: str) -> list[tuple[str,str]]:
+    statement = select(Summary.video_id, Summary.title).join(
+        ChatMessage, ChatMessage.video_id == Summary.video_id
+    ).where(
+        ChatMessage.user_id == target_user_id
+    ).distinct()
+    results = db.exec(statement).all()
+    return results
+
