@@ -69,6 +69,3 @@ def chat_endpoint(
     save_message(db, request.question, answer, video_id, user_id)
 
     return ChatResponse(answer=answer)
-
-
-@router.get("/past_conversations", response_model=)

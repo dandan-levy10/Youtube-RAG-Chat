@@ -14,9 +14,9 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     answer: str
 
-class PreviousConversationsRequest(BaseModel):
-    user_id: str
-
-class PreviousConversationsResponse(BaseModel):
+class PreviousConversationItem(BaseModel):
     video_id: str
     title: str
+
+class PreviousConversationsResponse(BaseModel):
+    conversations: list[PreviousConversationItem]
