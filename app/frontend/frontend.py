@@ -17,6 +17,7 @@ def get_api_client():
 
 api = get_api_client()
 
+
 # Initialise input value keys
 if "url_input_value" not in st.session_state:
     st.session_state.url_input_value = ""
@@ -82,6 +83,15 @@ def handle_send_message_click():
     else:
         st.write("Please enter a question")
 
+def handle_new_video_click():
+    # Initialise input value keys
+    st.session_state.url_input_value = ""
+    st.session_state.input_chat_message = ""
+
+    # Initialise key session state variables
+    st.session_state.video_url = None
+    st.session_state.summary = None
+    st.session_state.chat_history = []
 
 # -------- Build the UI ----------
 
@@ -112,7 +122,5 @@ else:
     question = st.text_input("Your question here:", key="input_chat_message")
     st.button("Send", on_click=handle_send_message_click) 
     
-    # if st.button("New video"):
-    #     for key in ["video_url", "summary", "chat_history", "session_id"]:
-    #         st.session_state.pop(key)
+    st.button("New video", on_click=handle_new_video_click)
 
