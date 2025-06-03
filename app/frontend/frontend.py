@@ -124,3 +124,4 @@ else:
     
     st.button("New video", on_click=handle_new_video_click)
 
+st.sidebar.title("Past Conversations")

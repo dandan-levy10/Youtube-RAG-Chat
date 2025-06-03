@@ -7,6 +7,7 @@ logger = logging.getLogger()
 
 from app.api.routers.summary import router as summary_router
 from app.api.routers.chat import router as chat_router
+from app.api.routers.session import router as session_router
 from db.session import engine
 from app.models.schemas import PreviousConversationItem, PreviousConversationsResponse
 from db.crud import get_video_ids_and_titles_by_user_id
@@ -46,6 +47,7 @@ app.add_middleware(
 # mount router under /api
 app.include_router(summary_router, prefix="/api")
 app.include_router(chat_router, prefix="/api")
+app.include_router(session_router, prefix="/api")
 
 @app.get("/previous_conversations/{user_id}", response_model=PreviousConversationsResponse)
 def get_past_conversations(
@@ -59,8 +61,9 @@ def get_past_conversations(
         raise HTTPException(status_code=502, detail=str(e)) from e
     
     # Convert to PreviousConversationsResponse pydantic model
-    response_list = PreviousConversationsResponse([PreviousConversationItem(video_id=video_id, title=title) for video_id, title in results])
-    return response_list
+    conversation_items = [PreviousConversationItem(video_id=video_id, title=title) for video_id, title in results]
+    final_response = PreviousConversationsResponse(conversations=conversation_items)
+    return final_response
 
 
 if __name__ == "__main__":

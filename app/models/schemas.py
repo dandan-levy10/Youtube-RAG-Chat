@@ -20,3 +20,7 @@ class PreviousConversationItem(BaseModel):
 
 class PreviousConversationsResponse(BaseModel):
     conversations: list[PreviousConversationItem]
+
+class SessionInitData(BaseModel):
+    user_id: str
+    is_new_user: bool
