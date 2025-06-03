@@ -1,9 +1,9 @@
-import pytest
-from sqlmodel import SQLModel, create_engine, Session, select
-from db.models import ChatMessage, Summary, Transcript
+
+from sqlmodel import select
+from uuid import uuid4
+from db.models import ChatMessage
 from db.crud import save_message, load_history, save_summary, load_summary, save_transcript, load_transcript
 from tests.conftest import in_memory_db
-from uuid import uuid4
 
 # Test for save_message and load_history
 def test_save_and_load_message_history(in_memory_db):
