@@ -17,6 +17,21 @@ def get_api_client():
 
 api = get_api_client()
 
+# Initialise input value keys
+if "url_input_value" not in st.session_state:
+    st.session_state.url_input_value = ""
+if "input_chat_message" not in st.session_state:
+    st.session_state.input_chat_message = ""
+
+# Initialise key session state variables
+if "video_url" not in st.session_state:
+    st.session_state.video_url = None
+if "summary" not in st.session_state:
+    st.session_state.summary = None
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
+# API-calling functions
 def fetch_summary(video_url: str) -> str:
     payload = {"video_url": video_url}
     response = api.post(f"{API_BASE}/summarise", json=payload)
@@ -38,22 +53,49 @@ def fetch_chat(video_url: str, question: str) -> str:
     response.raise_for_status()
     return response.json()["answer"]
 
-# Build the UI
+# ------ Callback functions --------
+def handle_get_summary_click():
+    input_url = st.session_state.get("url_input_value", "") # Retrieve using key given to text input box
+    if input_url:
+        st.session_state.video_url = input_url
+        summary = fetch_summary(video_url=input_url)
+        st.session_state.summary = summary
+        st.session_state.chat_history = []
+        # Clear input value from state- clear textbox input
+        st.session_state.url_input_value = ""
+    else:
+        st.write("Please enter a video URL")
+
+def handle_send_message_click():
+    # Retrieve question widget input from state
+    question = st.session_state.get("input_chat_message", "") 
+    if question and st.session_state.video_url:
+        answer = fetch_chat(
+            video_url= st.session_state.video_url,
+            question=question
+            )
+        st.session_state.chat_history.append((question, answer))
+        # Clear question widget input
+        st.session_state.input_chat_message = "" 
+    elif not st.session_state.video_url:
+        st.write("Please enter a video URL first")
+    else:
+        st.write("Please enter a question")
+
+
+# -------- Build the UI ----------
 
 # Title
 st.title(body="Youtube RAG Chat")
 
 
 # URL input form:
-if "video_url" not in st.session_state:
-    url = st.text_input("Enter a Youtube video URL and press ↵")
-    if st.button("Get Summary") and url:
-        # Save the URL in session_state
-        st.session_state.video_url = url
-        # Call backend for the summary
-        st.session_state.summary = fetch_summary(url)
-        # Initialise empty chat history
-        st.session_state.chat_history = []
+if not st.session_state.video_url:
+    url = st.text_input(
+        "Enter a Youtube video URL and press ↵", 
+        key="url_input_value" # This links the widget to st.session_state.url_input_value
+        )
+    st.button("Get Summary", on_click=handle_get_summary_click)
 
 else:
     st.subheader("Summary")
@@ -67,13 +109,10 @@ else:
     
     # Chat input
     st.subheader(body="Ask a question about the video")
-    question = st.text_input("Your question here:", key="user_question")
-    if st.button("Send") and st.session_state.user_question.strip():
-        answer = fetch_chat(video_url=st.session_state.video_url, question=question)
-        st.session_state.chat_history.append((question, answer))
-        st.session_state.user_question == ""
-
-    if st.button("New video"):
-        for key in ["video_url", "summary", "chat_history", "session_id"]:
-            st.session_state.pop(key)
+    question = st.text_input("Your question here:", key="input_chat_message")
+    st.button("Send", on_click=handle_send_message_click) 
+    
+    # if st.button("New video"):
+    #     for key in ["video_url", "summary", "chat_history", "session_id"]:
+    #         st.session_state.pop(key)
 
