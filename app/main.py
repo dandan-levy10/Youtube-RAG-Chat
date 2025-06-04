@@ -49,7 +49,7 @@ app.include_router(summary_router, prefix="/api")
 app.include_router(chat_router, prefix="/api")
 app.include_router(session_router, prefix="/api")
 
-@app.get("/previous_conversations/{user_id}", response_model=PreviousConversationsResponse)
+@app.get("/api/users/{user_id}/conversations", response_model=PreviousConversationsResponse)
 def get_past_conversations(
     user_id: str,
     db: Session = Depends(get_session), 

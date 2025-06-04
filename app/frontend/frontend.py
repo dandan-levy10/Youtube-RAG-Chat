@@ -58,14 +58,14 @@ def app_initial_setup():
         logger.info("Attempting to initialise app session with backend...")
         # POST request to the init endpoint
         init_response = api.post(f"{API_BASE}/session/init")
-        init_response.raise_for_status    # Check for errors
+        init_response.raise_for_status()    # Check for errors
         session_data = init_response.json()
 
         st.session_state.user_id = session_data.get("user_id")
-        st.session_state.session_initialised_flat = session_data.get("is_new_user", True)
+        st.session_state.session_initialised_flag = session_data.get("is_new_user", True)
 
         if st.session_state.user_id:
-            logger.info("App session initalised. User ID: {st.session_state.user_id} (New User: {is_new_user})")
+            logger.info(f"App session initalised. User ID: {st.session_state.user_id} (New User: {st.session_state.session_initialised_flag})")
             load_past_conversations()
         else:
             logger.warning("Session initialisation did not return a User ID")
@@ -77,8 +77,24 @@ def app_initial_setup():
         st.session_state.session_initialised_flag = True
 
 def load_past_conversations():
-    # TODO
-    pass
+    if st.session_state.user_id:
+        user_id = st.session_state.user_id
+        logger.info(f"Fetching past conversations for User ID: {user_id}")
+        try:
+            response = api.get(f"{API_BASE}/users/{user_id}/conversations")
+            response.raise_for_status()
+            conversations = response.json().get("conversations", [])
+            st.session_state.past_conversations = [item for item in conversations]
+            logger.debug(f"Loaded past_conversations: {st.session_state.past_conversations}")
+        except Exception as e:
+            logger.error(f"Could not load past_conversations: {e}", exc_info=True)
+            st.sidebar.error("Could not load past chats")
+            st.session_state.past_conversations = []
+    else:
+        logger.debug("No user_id in session; cannot load past conversations yet")
+        st.session_state.past_conversations = []
+
+
 
 def fetch_summary(video_url: str) -> str:
     payload = {"video_url": video_url}
@@ -95,8 +111,7 @@ def fetch_chat(video_url: str, question: str) -> str:
         "video_url": video_url,
         "question": question
     }
-    # if "session_id" in st.session_state:
-    #     payload["session_id"] = str(st.session_state.session_id)
+
     response = api.post(f"{API_BASE}/chat", json=payload)
     response.raise_for_status()
     return response.json()["answer"]
@@ -174,4 +189,8 @@ else:
     
     st.button("New video", on_click=handle_new_video_click)
 
-st.sidebar.title("Past Conversations")
+with st.sidebar:
+    st.title("Past Conversations")
+    if st.session_state.past_conversations:
+        for item in st.session_state.past_conversations:
+            st.button(f"{item["title"]}")

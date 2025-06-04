@@ -21,7 +21,7 @@ def initialise_session(
         is_new = True
         response.set_cookie(
             key="user_id",
-            value=current_user_id
+            value=current_user_id,
             httponly=True,
             max_age= 60 * 60 * 24 * 30,  # Cookie lasts a month
             samesite="Lax",
