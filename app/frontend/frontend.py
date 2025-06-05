@@ -33,6 +33,8 @@ if "input_chat_message" not in st.session_state:
 # Initialise key session state variables
 if "video_url" not in st.session_state:
     st.session_state.video_url = None
+if "video_id" not in st.session_state:
+    st.session_state.video_id = None
 if "summary" not in st.session_state:
     st.session_state.summary = None
 if "chat_history" not in st.session_state:
@@ -51,7 +53,7 @@ def app_initial_setup():
     and load initial data like past conversations.
     """
 
-    if st.session_state.session_initialised_flag:
+    if st.session_state.get("session_initialised_flag", False):
         return
     
     try:
@@ -95,7 +97,6 @@ def load_past_conversations():
         st.session_state.past_conversations = []
 
 
-
 def fetch_summary(video_url: str) -> str:
     payload = {"video_url": video_url}
     response = api.post(f"{API_BASE}/summarise", json=payload)
@@ -104,7 +105,7 @@ def fetch_summary(video_url: str) -> str:
     # If response returns a session_id in the JSON, stash it in front-end state
     # if "session_id" in data:
     #     st.session_state.session_id = data["session_id"]
-    return data["summary"]
+    return data
 
 def fetch_chat(video_url: str, question: str) -> str:
     payload = {
@@ -121,8 +122,11 @@ def handle_get_summary_click():
     input_url = st.session_state.get("url_input_value", "") # Retrieve using key given to text input box
     if input_url:
         st.session_state.video_url = input_url
-        summary = fetch_summary(video_url=input_url)
+        result = fetch_summary(video_url=input_url)
+        summary = result["summary"]
+        video_id = result["video_id"]
         st.session_state.summary = summary
+        st.session_state.video_id = video_id
         st.session_state.chat_history = []
         # Clear input value from state- clear textbox input
         st.session_state.url_input_value = ""
@@ -152,10 +156,31 @@ def handle_new_video_click():
 
     # Initialise key session state variables
     st.session_state.video_url = None
+    st.session_state.video_id = None
     st.session_state.summary = None
     st.session_state.chat_history = []
 
+def handle_previous_conversation_click(user_id: str, video_id: str):
+    try:
+        response = api.get(f"{API_BASE}/chat/user/{user_id}/conversations/{video_id}/get_history")
+        response.raise_for_status()
+        response = response.json()
+        logger.info(f"Successfully retrieved conversation history for User ID: {user_id}; Video ID: {video_id}")
+        # Load chat attributes into state
+        st.session_state.video_title= response["summary"]["title"]
+        st.session_state.summary= response["summary"]["summary"]
+        st.session_state.chat_history = [(chat_message["question"], chat_message["answer"]) for chat_message in response["history"]]
+        st.session_state.video_id = video_id
+        # TODO: Do I need to reconstruct video url? Summary should already exist from db, use crud function to load, don't need to call endpoint again
+        # Reload page with the new session state, should display the summary and chat history
+        # st.rerun()
+    except Exception as e:
+        logger.error(f"Failed to retrieve conversation history for User ID: {user_id}; Video ID: {video_id}. Error: {e}", exc_info=True)
+        st.error("Could not load conversation history")
+
+
 # -------- Build the UI ----------
+
 # Initialise the session, load previous chats for sidebar
 app_initial_setup()
 
@@ -165,7 +190,7 @@ st.title(body="Youtube RAG Chat")
 
 
 # URL input form:
-if not st.session_state.video_url:
+if not st.session_state.video_id:
     url = st.text_input(
         "Enter a Youtube video URL and press ↵", 
         key="url_input_value" # This links the widget to st.session_state.url_input_value
@@ -173,11 +198,12 @@ if not st.session_state.video_url:
     st.button("Get Summary", on_click=handle_get_summary_click)
 
 else:
+    # Render Summary
     st.subheader("Summary")
     st.write(st.session_state.summary)
     
-    st.subheader("Conversation")
     # Render the chat history
+    st.subheader("Conversation")
     for user_q, bot_a in st.session_state.chat_history:
         st.markdown(f"**You:** {user_q}")
         st.markdown(f"**Bot:** {bot_a}")
@@ -191,6 +217,14 @@ else:
 
 with st.sidebar:
     st.title("Past Conversations")
-    if st.session_state.past_conversations:
+    if "past_conversations" in st.session_state and st.session_state.past_conversations:
         for item in st.session_state.past_conversations:
-            st.button(f"{item["title"]}")
+            
+            st.button(
+                label=f"{item["title"]}", 
+                key=f"sidebar_btn_{item["video_id"]}",
+                on_click=handle_previous_conversation_click,
+                kwargs={"user_id": st.session_state.user_id, "video_id": item["video_id"]}
+                    )
+    else:
+        st.write("No past conversations found yet.")

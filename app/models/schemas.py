@@ -1,4 +1,5 @@
 from pydantic import BaseModel, HttpUrl
+from db.models import ChatMessage, Summary
 
 class SummaryRequest(BaseModel):
     video_url: HttpUrl
@@ -24,3 +25,9 @@ class PreviousConversationsResponse(BaseModel):
 class SessionInitData(BaseModel):
     user_id: str
     is_new_user: bool
+
+class LoadChatResponse(BaseModel):
+    user_id: str
+    video_id: str
+    history: list[ChatMessage]
+    summary: Summary
