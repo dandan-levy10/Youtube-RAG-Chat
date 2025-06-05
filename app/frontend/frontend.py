@@ -20,9 +20,6 @@ def get_api_client():
 
 api = get_api_client()
 
-# def update_side_panel():
-#     response=api.get(f"{API_BASE}/previous_conversations/{st.user_id}")
-                     
 
 # Initialise widget input value keys
 if "url_input_value" not in st.session_state:
@@ -99,12 +96,15 @@ def load_past_conversations():
 
 def fetch_summary(video_url: str) -> str:
     payload = {"video_url": video_url}
-    response = api.post(f"{API_BASE}/summarise", json=payload)
-    response.raise_for_status()
-    data = response.json()
-    # If response returns a session_id in the JSON, stash it in front-end state
-    # if "session_id" in data:
-    #     st.session_state.session_id = data["session_id"]
+    try:
+        response = api.post(f"{API_BASE}/summarise", json=payload)
+        response.raise_for_status()
+        data = response.json()
+    except Exception as e:
+        logger.error(f"API call to /summarise failed for {video_url}. Error: {e}",
+            exc_info=True # Includes traceback for the requests exception
+        )
+        raise # Re-raise the original requests exception to be caught by the caller
     return data
 
 def fetch_chat(video_url: str, question: str) -> str:
@@ -121,14 +121,29 @@ def fetch_chat(video_url: str, question: str) -> str:
 def handle_get_summary_click():
     input_url = st.session_state.get("url_input_value", "") # Retrieve using key given to text input box
     if input_url:
-        st.session_state.video_url = input_url
-        result = fetch_summary(video_url=input_url)
-        st.session_state.summary = result["summary"]
-        st.session_state.video_id = result["video_id"]
-        st.session_state.video_title = result["title"]
-        st.session_state.chat_history = []
-        # Clear input value from state- clear textbox input
-        st.session_state.url_input_value = ""
+        try:
+            with st.spinner():
+                st.session_state.video_url = input_url
+                result = fetch_summary(video_url=input_url)
+                st.session_state.summary = result["summary"]
+                st.session_state.video_id = result["video_id"]
+                st.session_state.video_title = result["title"]
+                st.session_state.chat_history = []
+                # Clear input value from state- clear textbox input
+                st.session_state.url_input_value = ""
+        except Exception as e: # Catches ANY exception from fetch_summary or this try block
+                # Log the full error and traceback for developers
+                logger.error(
+                    f"An error occurred in handle_get_summary_click for URL: {input_url}",
+                    exc_info=True # This ensures the full traceback is logged
+                )
+                # Show a very generic message to the user
+                st.error("Something went wrong while processing your request. Please try again later or try a different video url.")
+
+                # Reset relevant state on failure
+                st.session_state.video_id = None
+                st.session_state.summary = None
+                # Optionally keep input_url in the text box for user to see/correct
     else:
         st.write("Please enter a video URL")
 
@@ -171,9 +186,7 @@ def handle_previous_conversation_click(user_id: str, video_id: str):
         st.session_state.summary= response["summary"]["summary"]
         st.session_state.chat_history = [(chat_message["question"], chat_message["answer"]) for chat_message in response["history"]]
         st.session_state.video_id = video_id
-        # TODO: Do I need to reconstruct video url? Summary should already exist from db, use crud function to load, don't need to call endpoint again
-        # Reload page with the new session state, should display the summary and chat history
-        # st.rerun()
+
     except Exception as e:
         logger.error(f"Failed to retrieve conversation history for User ID: {user_id}; Video ID: {video_id}. Error: {e}", exc_info=True)
         st.error("Could not load conversation history")
