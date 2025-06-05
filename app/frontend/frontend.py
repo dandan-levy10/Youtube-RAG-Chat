@@ -20,8 +20,8 @@ def get_api_client():
 
 api = get_api_client()
 
-def update_side_panel():
-    response=api.get(f"{API_BASE}/previous_conversations/{st.user_id}")
+# def update_side_panel():
+#     response=api.get(f"{API_BASE}/previous_conversations/{st.user_id}")
                      
 
 # Initialise widget input value keys
@@ -136,9 +136,10 @@ def handle_get_summary_click():
 def handle_send_message_click():
     # Retrieve question widget input from state
     question = st.session_state.get("input_chat_message", "") 
-    if question and st.session_state.video_url:
+    if question and st.session_state.video_id:
+        video_url = f"https://www.youtube.com/watch?v={st.session_state.video_id}"
         answer = fetch_chat(
-            video_url= st.session_state.video_url,
+            video_url= video_url,
             question=question
             )
         st.session_state.chat_history.append((question, answer))
