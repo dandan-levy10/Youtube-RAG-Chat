@@ -7,6 +7,12 @@ class SummaryRequest(BaseModel):
 class SummaryResponse(BaseModel):
     video_id: str
     summary: str
+    title: str
+
+class IngestedSummaryData(BaseModel):
+    video_id: str
+    summary: str
+    title: str
 
 class ChatRequest(BaseModel):
     video_url: HttpUrl

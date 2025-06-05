@@ -6,6 +6,7 @@ from sqlmodel import Session
 
 from app.services.transcription import get_transcript, extract_video_id
 from db.crud import load_summary, save_summary
+from app.models.schemas import IngestedSummaryData
 
 
 logger = logging.getLogger(__name__)
@@ -40,19 +41,22 @@ def summarise_ingest(video_url: str, db: Session) -> str:
     # Try loading the existing record
     cached = load_summary(db, video_id)    # Optional[Summary]
     if cached is not None:
-        return cached.summary
+        return IngestedSummaryData(video_id=cached.video_id, summary=cached.summary, title=cached.title)
     
     # Cache miss → generate new summary
     logger.debug("Summary not found in cache, retrieving transcript to summarise")
     docs = get_transcript(video_url, db) # Searches for cached transcript, otherwise downloads it
     new_summary = summarise_documents(docs)
-    
+    title = docs[0].metadata["title"]
     # Persist for next time:
     save_summary(
         db=db,
         video_id=video_id,
-        title=docs[0].metadata["title"],
+        title=title,
         summary=new_summary,
         metadata=docs[0].metadata)
     
-    return new_summary
+    return IngestedSummaryData(
+        video_id=video_id,
+        summary=new_summary,
+        title=title)

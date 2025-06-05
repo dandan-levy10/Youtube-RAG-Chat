@@ -123,10 +123,9 @@ def handle_get_summary_click():
     if input_url:
         st.session_state.video_url = input_url
         result = fetch_summary(video_url=input_url)
-        summary = result["summary"]
-        video_id = result["video_id"]
-        st.session_state.summary = summary
-        st.session_state.video_id = video_id
+        st.session_state.summary = result["summary"]
+        st.session_state.video_id = result["video_id"]
+        st.session_state.video_title = result["title"]
         st.session_state.chat_history = []
         # Clear input value from state- clear textbox input
         st.session_state.url_input_value = ""
@@ -200,7 +199,7 @@ if not st.session_state.video_id:
 
 else:
     # Render Summary
-    st.subheader("Summary")
+    st.subheader(f"Summary- {st.session_state.video_title}")
     st.write(st.session_state.summary)
     
     # Render the chat history
