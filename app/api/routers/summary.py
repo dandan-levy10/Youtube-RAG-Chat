@@ -19,7 +19,7 @@ async def summarise_endpoint(request: SummaryRequest, db: Session = Depends(get_
     try:
         summary : IngestedSummaryData = summarise_ingest(video_url, db)
     except Exception as e:
-        logger.exception("Failed to summarise video %s", video_url)
+        logger.exception("Failed to summarise video {video_url}, error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail= str(e))
     
     return SummaryResponse(summary=summary.summary, video_id=summary.video_id, title = summary.title)

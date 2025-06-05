@@ -46,6 +46,12 @@ def summarise_ingest(video_url: str, db: Session) -> str:
     # Cache miss → generate new summary
     logger.debug("Summary not found in cache, retrieving transcript to summarise")
     docs = get_transcript(video_url, db) # Searches for cached transcript, otherwise downloads it
+
+    if not docs: 
+        logger.warning(f"No transcript documents available for summarization for URL: {video_url}")
+        # Raise an error to be caught by the endpoint
+        raise ValueError(f"Cannot summarize video: No transcript found or processed for {video_url}.")
+
     new_summary = summarise_documents(docs)
     title = docs[0].metadata["title"]
     # Persist for next time:
