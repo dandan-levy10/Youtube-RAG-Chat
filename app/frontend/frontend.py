@@ -1,7 +1,8 @@
-import streamlit as st
-import requests
 import json
 import logging
+
+import requests
+import streamlit as st
 
 logger = logging.getLogger()
 

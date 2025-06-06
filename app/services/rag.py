@@ -1,13 +1,14 @@
-from app.services.embedding import get_embedding_function
-from langchain_ollama import OllamaLLM
-from langchain.vectorstores import VectorStore
-from langchain_chroma.vectorstores import Chroma
 import logging
 
-from app.services.transcription import get_transcript, extract_video_id
-from app.services.chunking import chunk_documents
-from app.services.embedding import embed_and_save
+from langchain.vectorstores import VectorStore
+from langchain_chroma.vectorstores import Chroma
+from langchain_ollama import OllamaLLM
 from sqlmodel import Session
+
+from app.services.chunking import chunk_documents
+from app.services.embedding import embed_and_save, get_embedding_function
+from app.services.transcription import extract_video_id, get_transcript
+
 logger = logging.getLogger(__name__)
 
 class ChatMemory:

@@ -1,9 +1,13 @@
 
-from sqlmodel import select
 from uuid import uuid4
+
+from sqlmodel import select
+
+from db.crud import (load_history, load_summary, load_transcript, save_message,
+                     save_summary, save_transcript)
 from db.models import ChatMessage
-from db.crud import save_message, load_history, save_summary, load_summary, save_transcript, load_transcript
 from tests.conftest import in_memory_db
+
 
 # Test for save_message and load_history
 def test_save_and_load_message_history(in_memory_db):

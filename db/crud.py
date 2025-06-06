@@ -1,7 +1,9 @@
-from sqlmodel import Session, select
-from db.models import ChatMessage, Summary, Transcript
-from typing import List
 import logging
+from typing import List
+
+from sqlmodel import Session, select
+
+from db.models import ChatMessage, Summary, Transcript
 
 logger = logging.getLogger(__name__)
 

@@ -1,6 +1,7 @@
-from langchain_ollama import OllamaEmbeddings
-from langchain_chroma import Chroma 
 import logging
+
+from langchain_chroma import Chroma
+from langchain_ollama import OllamaEmbeddings
 
 logger = logging.getLogger(__name__)
 

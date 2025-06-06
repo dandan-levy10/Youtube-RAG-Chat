@@ -1,6 +1,7 @@
+import logging
+
 from langchain.schema import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-import logging
 
 logger = logging.getLogger(__name__)
 

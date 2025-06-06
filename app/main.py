@@ -1,22 +1,26 @@
 import logging
+
 from app.core.logging_setup import configure_logging
+
 # Set up logging
 configure_logging(level = 10)
 
 logger = logging.getLogger()
 
-from app.api.routers.summary import router as summary_router
+from contextlib import asynccontextmanager
+
+from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from sqlmodel import Session, SQLModel
+
 from app.api.routers.chat import router as chat_router
 from app.api.routers.session import router as session_router
-from db.session import engine
-from app.models.schemas import PreviousConversationItem, PreviousConversationsResponse
+from app.api.routers.summary import router as summary_router
+from app.models.schemas import (PreviousConversationItem,
+                                PreviousConversationsResponse)
 from db.crud import get_video_ids_and_titles_by_user_id
-from db.session import get_session
+from db.session import engine, get_session
 
-from fastapi import FastAPI, HTTPException, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-from sqlmodel import SQLModel, Session
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -67,8 +71,9 @@ def get_past_conversations(
 
 
 if __name__ == "__main__":
-    from app.core.logging_setup import configure_logging
     import uvicorn
+
+    from app.core.logging_setup import configure_logging
     
 
     uvicorn.run(
