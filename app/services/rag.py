@@ -18,7 +18,7 @@ class ChatMemory:
 
     def append(self, user_message: str, assistant_message: str):
         self.buffer.append((user_message, assistant_message))
-        logger.debug(f"Appended (user_message, assistant_message) tuple to memory")
+        logger.debug("Appended (user_message, assistant_message) tuple to memory")
 
         if len(self.buffer) > self.max_turns:
             self.buffer.pop(0)
@@ -87,7 +87,7 @@ class ChatSession:
 
         prompt_blocks.append(f"Relevant context: \n\n {context} \n\n")
 
-        prompt_blocks.append(f"Assistant: \n")
+        prompt_blocks.append("Assistant: \n")
 
         prompt = "\n".join(prompt_blocks)
         logger.debug(f"Prompt: {prompt}")

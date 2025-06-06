@@ -134,7 +134,7 @@ def handle_get_summary_click():
         except Exception as e: # Catches ANY exception from fetch_summary or this try block
                 # Log the full error and traceback for developers
                 logger.error(
-                    f"An error occurred in handle_get_summary_click for URL: {input_url}",
+                    f"An error occurred in handle_get_summary_click for URL: {input_url}, error: {e}",
                     exc_info=True # This ensures the full traceback is logged
                 )
                 # Show a very generic message to the user
