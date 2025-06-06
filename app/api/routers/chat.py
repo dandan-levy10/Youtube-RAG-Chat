@@ -1,23 +1,18 @@
 from fastapi import APIRouter, HTTPException, Depends, Response, Cookie
-from pydantic import BaseModel, HttpUrl
-import redis
-import redis.asyncio as aioredis
+from sqlmodel import Session
 from uuid import uuid4
-import json
 import logging
 
 from app.services.rag import rag_chat_service
-from app.models.schemas import ChatRequest, ChatResponse
+from app.models.schemas import ChatRequest, ChatResponse, LoadChatResponse
 from app.services.transcription import extract_video_id
+from db.session import get_session
+from db.crud import load_history, save_message, load_summary
 
 print("🟢 chat.py router loaded")
 
 
 logger = logging.getLogger(__name__)
-
-def get_redis():
-    # FastAPI dependency that returns singleton Redis Client
-    return aioredis.from_url("redis://localhost:6379/0")
 
 
 router = APIRouter(
@@ -26,55 +21,74 @@ router = APIRouter(
 )
 
 @router.post("/", response_model=ChatResponse)
-async def chat_endpoint(
+def chat_endpoint(
     request: ChatRequest,
     response: Response,
-    redis = Depends(get_redis),
-    session_id: str | None = Cookie(default=None)
+    db: Session = Depends(get_session),
+    user_id: str | None = Cookie(default=None)
     ):
     # retrieve or create session_id
-    if session_id is None:
-        session_id = str(uuid4())
-        logger.debug(f"Created a new UUID: {session_id}")
+    if user_id is None:
+        user_id = str(uuid4())
+        logger.debug(f"Created a new UUID: {user_id}")
         response.set_cookie(
-            key="session_id",
-            value=session_id,
+            key="user_id",
+            value=user_id,
             httponly=True,
             max_age=3600,
             samesite="strict",
-            secure=True,
+            secure=False,
             path="/"
         )
-        logger.debug(f"Set cookie in response")
+        logger.debug(f"Assigned and set new user_id cookie: {user_id}")
     
     video_id = extract_video_id(request.video_url)
-    # Load history from Redis using session_id + video_id
-    history_key = f"chat:{session_id}:{video_id}:history"
-    raw = await redis.lrange(history_key, 0, -1) # Get all results matching key
-    history = [json.loads(x) for x in raw] # Deserialise 
+    
+    # Load history from SQL DB 
+    history = load_history(db, user_id, video_id)   # Retrieves List[ChatMessage]
+    history = [(item.question, item.answer) for item in history]
+
     if not history:
-        logger.debug("Cache miss. History empty")
+        logger.debug("DB miss. History empty")
     else:
-        logger.debug(f"Cache hit. History: {history}")
+        logger.debug(f"DB hit. History: {history}")
 
     # Perform RAG QA call
     try:
         answer = rag_chat_service(
             video_url=str(request.video_url),
             question=request.question,
-            history=history
+            history=history,
+            db=db
             )
     except Exception as e:
         logger.exception("❌ rag_chat_service failed")
         raise HTTPException(status_code=502, detail=str(e)) from e
 
-    # Upload Q&A to redis
-    await redis.rpush(history_key, json.dumps([request.question, answer]))
-    await redis.expire(history_key, 3600)
+    # # Save Q&A DB
+    save_message(db, request.question, answer, video_id, user_id)
 
     return ChatResponse(answer=answer)
 
+@router.get("/user/{user_id}/conversations/{video_id}/get_history", response_model=LoadChatResponse)
+def load_previous_conversation(
+    user_id: str,
+    video_id: str,
+    db: Session = Depends(get_session)
+):
+    summary = load_summary(db=db, video_id=video_id)
+    history = load_history(db=db, user_id=user_id, video_id=video_id)
 
+    logger.info(f"Backend: user_id={user_id}, video_id={video_id}")
+    logger.info(f"Backend: summary loaded: {summary is not None}")
+    if summary:
+        logger.info(f"Backend: summary title: {summary.title}")
+    logger.info(f"Backend: history loaded, count: {len(history)}")
 
-    
-
+    response = LoadChatResponse(
+        user_id=user_id,
+        video_id=video_id,
+        history=history,
+        summary=summary
+        )
+    return response

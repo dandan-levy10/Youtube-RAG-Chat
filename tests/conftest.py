@@ -1,5 +1,7 @@
 # tests/conftest.py
 import warnings
+import pytest
+from sqlmodel import create_engine, SQLModel, Session
 
 # Silence the specific Pydantic v1 typing warning:
 warnings.filterwarnings(
@@ -17,3 +19,10 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 # Insert it at the front of sys.path so 'import app' works
 sys.path.insert(0, ROOT)
+
+@pytest.fixture
+def in_memory_db():
+    engine = create_engine("sqlite:///:memory:")
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
+        yield session

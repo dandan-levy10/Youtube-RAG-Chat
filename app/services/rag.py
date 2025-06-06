@@ -7,7 +7,7 @@ import logging
 from app.services.transcription import get_transcript, extract_video_id
 from app.services.chunking import chunk_documents
 from app.services.embedding import embed_and_save
-
+from sqlmodel import Session
 logger = logging.getLogger(__name__)
 
 class ChatMemory:
@@ -47,13 +47,13 @@ class TranscriptRetriever:
                     "filter": {"video_id": video_id}
                 }
             )
-            results = retriever.get_relevant_documents(query=query)
+            results = retriever.invoke(input=query)
         except Exception:
             logger.error("Failed calling get_relevant_documents with query=%r", query, exc_info=True)
             raise
 
         context = "\n\n".join(result.page_content for result in results)
-        logger.debug(f"TranscriptReciever.get_context called. Context: {context}")
+        logger.debug(f"TranscriptReciever.get_context called. Context: \n\n{context}")
 
         return context
         
@@ -95,7 +95,7 @@ class ChatSession:
         result = self.llm.generate([prompt])
         logger.info(f"LLM called. Result: {result}")
         answer = result.generations[0][0].text
-        logger.info(f"LLM answer text: {answer}")
+        # logger.info(f"LLM answer text: {answer}")
 
         # 4) Update memory
         # self.memory.append(user_message=question, assistant_message=answer)
@@ -130,7 +130,7 @@ def history_to_prompt(history: list[tuple[str,str]]):
     history = [f"User: {u}\n Assistant: {a}" for u, a in history]
     return "\n\n".join(history)
 
-def rag_chat_service(video_url: str, question: str, history: list[tuple[str,str]]) -> str:
+def rag_chat_service(video_url: str, question: str, history: list[tuple[str,str]], db: Session) -> str:
     # extract video_id
     video_id = extract_video_id(video_url=video_url)
     # create chat session
@@ -138,7 +138,7 @@ def rag_chat_service(video_url: str, question: str, history: list[tuple[str,str]
     # if not video_id exists in vectordb
     if not has_documents_for(video_id=video_id, vectordb=session.vectorstore):
         # retrieve transcript
-        documents = get_transcript(video_url=video_url)
+        documents = get_transcript(video_url=video_url, db=db)
         # chunk transcript
         chunks = chunk_documents(documents, chunk_size= 800, chunk_overlap= 50)
         # embed chunks, upload to vectordb

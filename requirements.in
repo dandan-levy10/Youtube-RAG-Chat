@@ -1,0 +1,28 @@
+# requirements.in
+
+# Backend Framework & Server
+fastapi
+uvicorn[standard]
+
+# Database & Data Models
+sqlmodel
+
+# LangChain & AI Components
+langchain-community
+langchain-ollama
+langchain-chroma  # Wrapper for ChromaDB integration
+langchain
+yt-dlp
+youtube-transcript-api
+pypdf             # For document processing, likely used by LangChain
+
+# Frontend
+streamlit
+requests          # For making API calls from Streamlit to FastAPI
+
+# --- Development & Testing ---
+# Add a new line and "-c requirements.in" to your pip-compile command
+# to separate dev dependencies. For now, we'll keep it simple.
+
+pytest
+flake8            # Add the linter for your CI pipeline

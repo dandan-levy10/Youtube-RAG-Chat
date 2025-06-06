@@ -2,10 +2,12 @@ from langchain_ollama import OllamaLLM
 from langchain.chains.summarize import load_summarize_chain
 from langchain_core.documents import Document
 import logging
-from pathlib import Path
-import json
+from sqlmodel import Session
 
 from app.services.transcription import get_transcript, extract_video_id
+from db.crud import load_summary, save_summary
+from app.models.schemas import IngestedSummaryData
+
 
 logger = logging.getLogger(__name__)
 
@@ -33,35 +35,34 @@ def length_function(documents: list[Document]) -> int:
     # logger.info(f"Max input size: {llm.max_input_size}")
     return length 
 
-SUMMARY_CACHE_DIR = Path(__file__).parent.parent / "summary_cache"
-SUMMARY_CACHE_DIR.mkdir(exist_ok=True)
-
-def summarise_ingest(video_url: str, summary_cache_dir: Path = SUMMARY_CACHE_DIR) -> str:
+def summarise_ingest(video_url: str, db: Session) -> str:
     video_id = extract_video_id(video_url)
-    summary_cache_dir.mkdir(parents=True, exist_ok=True) 
-    summary_cache_path = summary_cache_dir / f"{video_id}.json"
     
-    if summary_cache_path.exists():
-        try:
-            data = json.loads(summary_cache_path.read_text())
-            summary = data["summary"]
-        except (ValueError, KeyError):
-            logger.warning("Cache corrupted, re-generating summary for %s", video_id)
-        else:
-            logger.info(f"Successfully retrieved summary for video '{data["metadata"]["title"]}' (id: {video_id}) from cache.")
-            logger.debug(f"Summary sample: {summary[:200]}")
-            return summary
+    # Try loading the existing record
+    cached = load_summary(db, video_id)    # Optional[Summary]
+    if cached is not None:
+        return IngestedSummaryData(video_id=cached.video_id, summary=cached.summary, title=cached.title)
     
-    # Either cache didn't exist or was corrupted -> get transcript & make new summary
+    # Cache miss → generate new summary
     logger.debug("Summary not found in cache, retrieving transcript to summarise")
-    docs = get_transcript(video_url=video_url) # Searches for cached transcript, otherwise downloads it
-    summary = summarise_documents(docs)
-    serial = {"summary": summary, "metadata":docs[0].metadata}
+    docs = get_transcript(video_url, db) # Searches for cached transcript, otherwise downloads it
 
-    # Atomic write
-    tmp = summary_cache_path.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(serial, ensure_ascii=False, indent=2), encoding="utf-8")
-    tmp.replace(summary_cache_path)
-    logger.info(f"Cached summary at {summary_cache_path}")
+    if not docs: 
+        logger.warning(f"No transcript documents available for summarization for URL: {video_url}")
+        # Raise an error to be caught by the endpoint
+        raise ValueError(f"Cannot summarize video: No transcript found or processed for {video_url}.")
 
-    return summary
+    new_summary = summarise_documents(docs)
+    title = docs[0].metadata["title"]
+    # Persist for next time:
+    save_summary(
+        db=db,
+        video_id=video_id,
+        title=title,
+        summary=new_summary,
+        metadata=docs[0].metadata)
+    
+    return IngestedSummaryData(
+        video_id=video_id,
+        summary=new_summary,
+        title=title)
