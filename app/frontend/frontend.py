@@ -138,7 +138,7 @@ def handle_get_summary_click():
                     exc_info=True # This ensures the full traceback is logged
                 )
                 # Show a very generic message to the user
-                st.error("Something went wrong while processing your request. Please try again later or try a different video url.")
+                st.error("Something went wrong while processing your request. Please try again later or try a different video url.g")
 
                 # Reset relevant state on failure
                 st.session_state.video_id = None
