@@ -59,7 +59,7 @@ def summarise_ingest(video_url: str, db: Session) -> str:
         db=db,
         video_id=video_id,
         title=title,
-        summary=new_summary,
+        summary_record=new_summary,
         metadata=docs[0].metadata)
     
     return IngestedSummaryData(

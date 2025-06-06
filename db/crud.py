@@ -33,17 +33,17 @@ def load_history(db: Session, user_id: str, video_id: str) -> List[ChatMessage]:
 # Summary table:
 
 def save_summary(db: Session, video_id: str, title: str, summary: str, metadata: dict) -> Summary:
-    summary = Summary(
+    summary_record = Summary(
         video_id=video_id,
         title=title,
         summary=summary,
         doc_metadata=metadata
     )
-    db.add(summary)
+    db.add(summary_record)
     db.commit()
-    db.refresh(summary)
+    db.refresh(summary_record)
     logger.debug(f"Successfully saved summary for video {title}; video id {video_id}.")
-    return summary
+    return summary_record
 
 def load_summary(db: Session, video_id: str) -> Summary | None:
     summary = db.get(Summary, video_id)
