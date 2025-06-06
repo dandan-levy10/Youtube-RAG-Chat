@@ -1,9 +1,8 @@
 import logging
+import sys
 from logging import NullHandler
 from logging.config import dictConfig
 from pathlib import Path
-import sys
-
 
 LOG_FILE = Path("app") / "app.log"
     

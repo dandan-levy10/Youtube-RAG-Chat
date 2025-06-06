@@ -1,13 +1,14 @@
-from fastapi import APIRouter, HTTPException, Depends, Response, Cookie
-from sqlmodel import Session
-from uuid import uuid4
 import logging
+from uuid import uuid4
 
-from app.services.rag import rag_chat_service
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
+from sqlmodel import Session
+
 from app.models.schemas import ChatRequest, ChatResponse, LoadChatResponse
+from app.services.rag import rag_chat_service
 from app.services.transcription import extract_video_id
+from db.crud import load_history, load_summary, save_message
 from db.session import get_session
-from db.crud import load_history, save_message, load_summary
 
 print("🟢 chat.py router loaded")
 
@@ -43,6 +44,15 @@ def chat_endpoint(
         logger.debug(f"Assigned and set new user_id cookie: {user_id}")
     
     video_id = extract_video_id(request.video_url)
+    
+    # This is the guard clause. We handle the "None" case here.
+    if video_id is None:
+        # If we can't get a video_id, we can't proceed.
+        # It's best to stop and return an error to the user.
+        raise HTTPException(
+            status_code=400, 
+            detail="Could not extract a valid video ID from the provided URL."
+        )
     
     # Load history from SQL DB 
     history = load_history(db, user_id, video_id)   # Retrieves List[ChatMessage]

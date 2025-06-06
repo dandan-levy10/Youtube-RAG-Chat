@@ -1,7 +1,9 @@
-from fastapi import Response, APIRouter, Cookie
-from app.models.schemas import SessionInitData
+import logging
 from uuid import uuid4
-import logging 
+
+from fastapi import APIRouter, Cookie, Response
+
+from app.models.schemas import SessionInitData
 
 logger = logging.getLogger()
 

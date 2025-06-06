@@ -1,13 +1,13 @@
-from langchain_ollama import OllamaLLM
+import logging
+
 from langchain.chains.summarize import load_summarize_chain
 from langchain_core.documents import Document
-import logging
+from langchain_ollama import OllamaLLM
 from sqlmodel import Session
 
-from app.services.transcription import get_transcript, extract_video_id
-from db.crud import load_summary, save_summary
 from app.models.schemas import IngestedSummaryData
-
+from app.services.transcription import extract_video_id, get_transcript
+from db.crud import load_summary, save_summary
 
 logger = logging.getLogger(__name__)
 

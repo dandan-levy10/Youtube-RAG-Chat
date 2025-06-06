@@ -1,14 +1,14 @@
-from langchain_community.document_loaders import YoutubeLoader
-from yt_dlp import YoutubeDL # for metadata
+import logging
+from urllib.parse import parse_qs, urlparse
+
 from langchain.schema import Document
-from urllib.parse import urlparse, parse_qs
+from langchain_community.document_loaders import YoutubeLoader
 from pydantic import HttpUrl
 from sqlmodel import Session
-import logging
+from yt_dlp import YoutubeDL  # for metadata
 
 from app.core.logging_setup import setup_logging
 from db.crud import load_transcript, save_transcript
-
 
 # Set up logger
 setup_logging()

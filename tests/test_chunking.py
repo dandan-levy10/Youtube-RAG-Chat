@@ -1,6 +1,8 @@
-from app.services.chunking import chunk_documents
-from langchain.schema import Document
 import pytest
+from langchain.schema import Document
+
+from app.services.chunking import chunk_documents
+
 
 @pytest.fixture
 def one_long_doc():

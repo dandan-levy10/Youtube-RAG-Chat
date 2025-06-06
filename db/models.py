@@ -1,6 +1,8 @@
-from sqlmodel import SQLModel, Field, Column, JSON
-from uuid import uuid4
 from datetime import datetime, timezone
+from uuid import uuid4
+
+from sqlmodel import JSON, Column, Field, SQLModel
+
 
 class ChatMessage(SQLModel, table = True):
     id: str = Field(default_factory= lambda: str(uuid4()), primary_key=True)

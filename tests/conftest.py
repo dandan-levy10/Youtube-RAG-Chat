@@ -1,7 +1,8 @@
 # tests/conftest.py
 import warnings
+
 import pytest
-from sqlmodel import create_engine, SQLModel, Session
+from sqlmodel import Session, SQLModel, create_engine
 
 # Silence the specific Pydantic v1 typing warning:
 warnings.filterwarnings(
@@ -10,9 +11,9 @@ warnings.filterwarnings(
     module=r"pydantic\.v1\.typing"
 )
 
+import os
 # tests/conftest.py
 import sys
-import os
 
 # Determine project root (one level up from tests/)
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
