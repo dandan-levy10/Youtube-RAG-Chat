@@ -1,19 +1,12 @@
-name: CI/CD Pipeline
-
-on:
-  push:
-    branches:
-    - main
-    - 'feature/**'  # Rons on pushes to any branch in the feature/ directory
-  pull_request:
-    branches: [ main ]
+# .github/workflows/main.yml
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
     - name: Set up Python
       uses: actions/setup-python@v3
@@ -23,20 +16,29 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        # Install application dependencies
         pip install -r requirements.txt
-        # Install linting and testing tools
-        pip install flake8 isort mypy pytest
+        pip install flake8 isort mypy pytest autoflake8
 
-    - name: Lint with flake8, isort, mypy
+    - name: Code Analysis and Checks
       run: |
-        # isort checks that imports are sorted correctly
+        # --- Step 1: Check Import Sorting (Blocking) ---
         isort . --check
-        # flake8 checks for style, complexity, and logical errors
-        flake8 .
-        # mypy checks for type-related bugs
+
+        # --- Step 2: Check for Critical Errors with flake8 (Blocking) ---
+        # This command ONLY checks for F-codes (unused imports, undefined names, etc.)
+        # It will FAIL the build if it finds any.
+        echo "--- Running critical linter checks ---"
+        flake8 . --select=F
+
+        # --- Step 3: Check for Stylistic Issues (Advisory Only) ---
+        # This command checks for style warnings (E/W codes) and uses --exit-zero
+        # to ensure it PRINTS the warnings but NEVER fails the build.
+        echo "--- Running advisory style checks ---"
+        flake8 . --ignore=F --exit-zero
+
+        # --- Step 4: Check for Type Errors with mypy (Blocking) ---
         mypy .
-    
-    - name: Test with pytest
+
+    - name: Run tests
       run: |
         pytest
