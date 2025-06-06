@@ -117,7 +117,7 @@ def get_transcript(video_url: str, db: Session) -> list[Document]:
     save_transcript(
         db=db, 
         video_id=video_id, 
-        title=metadata["title"], 
+        title=title, 
         transcript=full_text, 
         metadata=metadata
         )
