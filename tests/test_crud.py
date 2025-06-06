@@ -6,7 +6,6 @@ from sqlmodel import select
 from db.crud import (load_history, load_summary, load_transcript, save_message,
                      save_summary, save_transcript)
 from db.models import ChatMessage
-from tests.conftest import in_memory_db
 
 
 # Test for save_message and load_history

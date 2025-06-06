@@ -1,11 +1,7 @@
 import logging
 
 from app.core.logging_setup import setup_logging
-from app.services.chunking import chunk_documents
-from app.services.embedding import embed_and_save
 from app.services.rag import create_chat_session
-from app.services.summariser import length_function, summarise_documents
-from app.services.transcription import get_transcript
 
 setup_logging(level=logging.DEBUG)
 

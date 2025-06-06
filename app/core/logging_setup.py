@@ -1,6 +1,5 @@
 import logging
 import sys
-from logging import NullHandler
 from logging.config import dictConfig
 from pathlib import Path
 

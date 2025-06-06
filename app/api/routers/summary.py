@@ -6,7 +6,6 @@ from sqlmodel import Session
 from app.models.schemas import (IngestedSummaryData, SummaryRequest,
                                 SummaryResponse)
 from app.services.summariser import summarise_ingest
-from app.services.transcription import extract_video_id
 from db.session import get_session
 
 logger = logging.getLogger(__name__)
