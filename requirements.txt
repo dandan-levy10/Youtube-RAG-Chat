@@ -170,6 +170,7 @@ six @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_03myqm
 smmap==5.0.2
 sniffio @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/sniffio_1728586434087/work
 SQLAlchemy==2.0.40
+sqlmodel==0.0.24
 stack_data @ file:///home/conda/feedstock_root/build_artifacts/stack_data_1733569443808/work
 starlette @ file:///home/conda/feedstock_root/build_artifacts/starlette_1737823930525/work
 streamlit==1.45.1
