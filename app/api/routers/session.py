@@ -26,7 +26,7 @@ def initialise_session(
             value=current_user_id,
             httponly=True,
             max_age= 60 * 60 * 24 * 30,  # Cookie lasts a month
-            samesite="Lax",
+            samesite="lax",
             secure=False,
             path="/"
         )

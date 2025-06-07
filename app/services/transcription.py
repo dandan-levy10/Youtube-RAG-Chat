@@ -16,7 +16,7 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 
-def extract_video_id(video_url: HttpUrl) -> str | None:
+def extract_video_id(video_url: str) -> str | None:
     # Normalise to a build-in str
     video_url = str(video_url)
     

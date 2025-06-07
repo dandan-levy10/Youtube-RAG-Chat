@@ -3,6 +3,8 @@ import logging
 import requests
 import streamlit as st
 
+from app.models.schemas import SummaryResponse, ChatResponse
+
 logger = logging.getLogger()
 
 API_BASE = "http://localhost:8000/api"
@@ -94,20 +96,23 @@ def load_past_conversations():
         st.session_state.past_conversations = []
 
 
-def fetch_summary(video_url: str) -> str:
+def fetch_summary(video_url: str) -> SummaryResponse:
     payload = {"video_url": video_url}
     try:
         response = api.post(f"{API_BASE}/summarise", json=payload)
         response.raise_for_status()
         data = response.json()
+
+        # Validate the raw dictonary against the pydantic model
+        validated_data = SummaryResponse.model_validate(data)
     except Exception as e:
         logger.error(f"API call to /summarise failed for {video_url}. Error: {e}",
             exc_info=True # Includes traceback for the requests exception
         )
         raise # Re-raise the original requests exception to be caught by the caller
-    return data
+    return validated_data
 
-def fetch_chat(video_url: str, question: str) -> str:
+def fetch_chat(video_url: str, question: str) -> ChatResponse:
     payload = {
         "video_url": video_url,
         "question": question
@@ -115,7 +120,10 @@ def fetch_chat(video_url: str, question: str) -> str:
 
     response = api.post(f"{API_BASE}/chat", json=payload)
     response.raise_for_status()
-    return response.json()["answer"]
+    data = response.json
+    # Validate the response
+    validated_response = ChatResponse.model_validate(data)
+    return validated_response
 
 # ------ Callback functions --------
 def handle_get_summary_click():
@@ -124,10 +132,10 @@ def handle_get_summary_click():
         try:
             with st.spinner():
                 st.session_state.video_url = input_url
-                result = fetch_summary(video_url=input_url)
-                st.session_state.summary = result["summary"]
-                st.session_state.video_id = result["video_id"]
-                st.session_state.video_title = result["title"]
+                result: SummaryResponse = fetch_summary(video_url=input_url)
+                st.session_state.summary = result.summary
+                st.session_state.video_id = result.video_id
+                st.session_state.video_title = result.title
                 st.session_state.chat_history = []
                 # Clear input value from state- clear textbox input
                 st.session_state.url_input_value = ""
@@ -138,7 +146,7 @@ def handle_get_summary_click():
                     exc_info=True # This ensures the full traceback is logged
                 )
                 # Show a very generic message to the user
-                st.error("Something went wrong while processing your request. Please try again later or try a different video url.g")
+                st.error("Something went wrong while processing your request. Please try again later or try a different video url.")
 
                 # Reset relevant state on failure
                 st.session_state.video_id = None
@@ -152,10 +160,11 @@ def handle_send_message_click():
     question = st.session_state.get("input_chat_message", "") 
     if question and st.session_state.video_id:
         video_url = f"https://www.youtube.com/watch?v={st.session_state.video_id}"
-        answer = fetch_chat(
+        chat_response: ChatResponse = fetch_chat(
             video_url= video_url,
             question=question
             )
+        answer: str = chat_response.answer
         st.session_state.chat_history.append((question, answer))
         # Clear question widget input
         st.session_state.input_chat_message = "" 
