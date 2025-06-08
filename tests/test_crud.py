@@ -49,7 +49,7 @@ def test_save_and_load_summary(in_memory_db):
     summary_text = "This is a concise summary of the video content."
 
     # Save the summary
-    save_summary(db=in_memory_db, video_id=video_id, title=title, summary_record=summary_text, metadata=metadata)
+    save_summary(db=in_memory_db, video_id=video_id, title=title, summary=summary_text, metadata=metadata)
 
     # Load the summaries
     loaded_summary = load_summary(db=in_memory_db, video_id=video_id)
