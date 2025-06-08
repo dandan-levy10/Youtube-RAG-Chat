@@ -3,7 +3,6 @@ from urllib.parse import parse_qs, urlparse
 
 from langchain.schema import Document
 from langchain_community.document_loaders import YoutubeLoader
-from pydantic import HttpUrl
 from sqlmodel import Session
 from yt_dlp import YoutubeDL  # for metadata
 

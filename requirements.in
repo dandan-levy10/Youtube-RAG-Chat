@@ -26,5 +26,6 @@ requests          # For making API calls from Streamlit to FastAPI
 
 pytest
 flake8            # Add the linter for your CI pipeline
+autoflake
 isort
 mypy
