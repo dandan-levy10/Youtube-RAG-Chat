@@ -126,7 +126,7 @@ def fetch_chat(video_url: str, question: str) -> ChatResponse:
     return validated_response
 
 # ------ Callback functions --------
-def handle_get_summary_click():
+def handle_get_summary_click() -> None:
     input_url = st.session_state.get("url_input_value", "") # Retrieve using key given to text input box
     if input_url:
         try:
@@ -155,7 +155,7 @@ def handle_get_summary_click():
     else:
         st.write("Please enter a video URL")
 
-def handle_send_message_click():
+def handle_send_message_click() -> None:
     # Retrieve question widget input from state
     question = st.session_state.get("input_chat_message", "") 
     if question and st.session_state.video_id:
@@ -173,7 +173,7 @@ def handle_send_message_click():
     else:
         st.write("Please enter a question")
 
-def handle_new_video_click():
+def handle_new_video_click() -> None:
     # Initialise input value keys
     st.session_state.url_input_value = ""
     st.session_state.input_chat_message = ""

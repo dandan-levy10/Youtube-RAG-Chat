@@ -4,7 +4,7 @@ from uuid import uuid4
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
 from sqlmodel import Session
 
-from app.models.schemas import ChatRequest, ChatResponse, LoadChatResponse
+from app.models.schemas import ChatRequest, ChatResponse, LoadChatResponse, ChatMessage
 from app.services.rag import rag_chat_service
 from app.services.transcription import extract_video_id
 from db.crud import load_history, load_summary, save_message
@@ -43,7 +43,7 @@ def chat_endpoint(
         )
         logger.debug(f"Assigned and set new user_id cookie: {user_id}")
     
-    video_id = extract_video_id(request.video_url)
+    video_id = extract_video_id(str(request.video_url)) # convert HttpUrl to str
     
     # This is the guard clause. We handle the "None" case here.
     if video_id is None:
@@ -55,8 +55,8 @@ def chat_endpoint(
         )
     
     # Load history from SQL DB 
-    history = load_history(db, user_id, video_id)   # Retrieves List[ChatMessage]
-    history = [(item.question, item.answer) for item in history]
+    chat_history_objects: list[ChatMessage] = load_history(db, user_id, video_id)   # Retrieves List[ChatMessage]
+    history: list[tuple[str, str]] = [(item.question, item.answer) for item in chat_history_objects]
 
     if not history:
         logger.debug("DB miss. History empty")

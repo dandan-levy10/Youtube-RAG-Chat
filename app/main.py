@@ -57,7 +57,7 @@ app.include_router(session_router, prefix="/api")
 def get_past_conversations(
     user_id: str,
     db: Session = Depends(get_session), 
-    ) -> list[tuple[str,str]]:
+    ) -> PreviousConversationsResponse:
     try:
         results = get_video_ids_and_titles_by_user_id(db=db, target_user_id=user_id)
     except Exception as e:

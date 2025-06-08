@@ -12,11 +12,11 @@ from app.services.transcription import extract_video_id, get_transcript
 logger = logging.getLogger(__name__)
 
 class ChatMemory:
-    def __init__(self, max_turns=5):
+    def __init__(self, max_turns: int=5) -> None:
         self.max_turns = max_turns
-        self.buffer = [] # list of (user, assistant) tuples
+        self.buffer: list[tuple[str, str]] = [] # list of (user, assistant) tuples
 
-    def append(self, user_message: str, assistant_message: str):
+    def append(self, user_message: str, assistant_message: str) -> None:
         self.buffer.append((user_message, assistant_message))
         logger.debug("Appended (user_message, assistant_message) tuple to memory")
 
@@ -24,13 +24,13 @@ class ChatMemory:
             self.buffer.pop(0)
             logger.debug("Memory buffer capacity exceeded {self.max_turns}, removed oldest message")
 
-    def to_prompt(self):
+    def to_prompt(self) -> str:
         history = [f"User: {u}; \nAssistant: {a}" for u, a in self.buffer]
         logger.debug(f"ChatMemory.to_prompt called. History: {history}")
         return "\n\n".join(history)
 
 class TranscriptRetriever:
-    def __init__(self, vector_store: VectorStore, k=4): 
+    def __init__(self, vector_store: VectorStore, k: int=4) -> None:
         self.vector_store = vector_store 
         self.k = k
         # retriever = vector_store.as_retriever(
@@ -59,7 +59,7 @@ class TranscriptRetriever:
         return context
         
 class ChatSession:
-    def __init__(self, llm, vectordb, retriever: TranscriptRetriever, memory: ChatMemory, prompt_template: str):
+    def __init__(self, llm: OllamaLLM, vectordb: Chroma, retriever: TranscriptRetriever, memory: ChatMemory, prompt_template: str) -> None:
         self.llm = llm
         self.vectorstore = vectordb
         self.retriever = retriever
@@ -78,10 +78,10 @@ class ChatSession:
 
         prompt_blocks.append(self.prompt_template)
         
-        history = history_to_prompt(history)
+        history_as_prompt: str = history_to_prompt(history)
 
         if history:
-            prompt_blocks.append(history)
+            prompt_blocks.append(history_as_prompt)
 
         prompt_blocks.append(f"User: {question} \n\n")
 
@@ -106,7 +106,7 @@ class ChatSession:
 
 prompt_starter = "You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If the context provided doesn't provide an answer to the question, just say that you don't know. Use three sentences maximum and keep the answer concise."
 
-def create_chat_session():
+def create_chat_session() -> ChatSession:
     # (1) instantiate your pieces
     memory    = ChatMemory(max_turns=5)
     embedding_function = get_embedding_function()
@@ -122,14 +122,18 @@ def create_chat_session():
     logger.debug("Chat session created.")
     return session
 
-def has_documents_for(video_id: str, vectordb) -> bool:
+def has_documents_for(video_id: str, vectordb: Chroma) -> bool:
     col = vectordb._collection
     result = col.get(where={"video_id": video_id}, limit=1)
-    return len(result["documents"]) > 0
+    documents = result["documents"]
+    if documents and len(documents) > 0:
+        return True
+    else:
+        return False
 
-def history_to_prompt(history: list[tuple[str,str]]):
-    history = [f"User: {u}\n Assistant: {a}" for u, a in history]
-    return "\n\n".join(history)
+def history_to_prompt(history: list[tuple[str,str]]) -> str:
+    history_chunks = [f"User: {u}\n Assistant: {a}" for u, a in history]
+    return "\n\n".join(history_chunks)
 
 def rag_chat_service(video_url: str, question: str, history: list[tuple[str,str]], db: Session) -> str:
     # extract video_id

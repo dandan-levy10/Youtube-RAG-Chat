@@ -16,10 +16,12 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 
-def extract_video_id(video_url: str) -> str | None:
+def extract_video_id(video_url: str) -> str:
     # Normalise to a build-in str
     video_url = str(video_url)
     
+    video_id: str | None = None
+
     parsed = urlparse(video_url)
     # youtu.be/XYZ
     if parsed.netloc.endswith("youtu.be"):
@@ -32,7 +34,10 @@ def extract_video_id(video_url: str) -> str | None:
         logger.error(f"Failed to extract video_id from URL: {video_url}")
         raise ValueError(f"Invalid Youtube URL, could not parse video_id: {video_url}")
 
-    return str(video_id)
+    # Assertion that video_id is a string- tells mypy that video_id is not None
+    assert video_id is not None
+
+    return video_id
 
 
 def get_transcript(video_url: str, db: Session) -> list[Document]:
@@ -125,7 +130,3 @@ def get_transcript(video_url: str, db: Session) -> list[Document]:
     # Return List[Document]
     return docs
 
-
-if __name__ == "__main__":
-    logger = logging.getLogger(__name__)
-    get_transcript(video_url="https://www.youtube.com/watch?v=ZrK3L0IXb9c&ab_channel=TechWithTim")

@@ -4,6 +4,7 @@ from langchain.chains.summarize import load_summarize_chain
 from langchain_core.documents import Document
 from langchain_ollama import OllamaLLM
 from sqlmodel import Session
+from typing import TypedDict, cast
 
 from app.models.schemas import IngestedSummaryData
 from app.services.transcription import extract_video_id, get_transcript
@@ -13,15 +14,16 @@ logger = logging.getLogger(__name__)
 
 llm = OllamaLLM(
     model="llama3.2:latest",
-    model_kwargs={
-        "max_tokens": 16000,
-        "temperature": 0.0,
-    }
+    temperature=0.0,
+    num_predict=256, # Max tokens to predict when generating text
     )
+
+class SummaryChainOutput(TypedDict):
+    output_text: str
 
 def summarise_documents(documents: list[Document]) -> str:
     chain = load_summarize_chain(llm=llm, chain_type="stuff")
-    summary = chain.invoke(input=documents)
+    summary: SummaryChainOutput = cast(SummaryChainOutput, chain.invoke({"input_documents":documents}))
     logger.info(f"Summarised transcript from video '{documents[0].metadata["title"]}'  documents using '{chain._chain_type}' chain type")
     logger.debug(f"Summary: {summary["output_text"]}")
     
@@ -35,7 +37,7 @@ def length_function(documents: list[Document]) -> int:
     # logger.info(f"Max input size: {llm.max_input_size}")
     return length 
 
-def summarise_ingest(video_url: str, db: Session) -> str:
+def summarise_ingest(video_url: str, db: Session) -> IngestedSummaryData:
     video_id = extract_video_id(video_url)
     
     # Try loading the existing record
@@ -59,7 +61,7 @@ def summarise_ingest(video_url: str, db: Session) -> str:
         db=db,
         video_id=video_id,
         title=title,
-        summary_record=new_summary,
+        summary=new_summary,
         metadata=docs[0].metadata)
     
     return IngestedSummaryData(
