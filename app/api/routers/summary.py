@@ -3,8 +3,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 
-from app.models.schemas import (IngestedSummaryData, SummaryRequest,
-                                SummaryResponse)
+from app.models.schemas import IngestedSummaryData, SummaryRequest, SummaryResponse
 from app.services.summariser import summarise_ingest
 from db.session import get_session
 
