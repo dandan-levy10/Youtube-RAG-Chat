@@ -3,7 +3,7 @@ import logging
 import requests
 import streamlit as st
 
-from models.schemas import ChatResponse, SummaryResponse
+from shared.schemas import ChatResponse, SummaryResponse
 from app.config import settings
 
 logger = logging.getLogger()
