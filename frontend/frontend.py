@@ -3,11 +3,12 @@ import logging
 import requests
 import streamlit as st
 
-from app.models.schemas import ChatResponse, SummaryResponse
+from models.schemas import ChatResponse, SummaryResponse
+from app.config import settings
 
 logger = logging.getLogger()
 
-API_BASE = "http://localhost:8000/api"
+API_BASE = f"{settings.BACKEND_URL}/api"
 
 @st.cache_resource
 def get_api_client():

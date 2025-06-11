@@ -1,0 +1,6 @@
+# frontend requirements.in
+
+streamlit
+requests
+python-dotenv
+pydantic
