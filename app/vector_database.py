@@ -4,6 +4,7 @@ from langchain_ollama import OllamaEmbeddings
 
 from config import settings
 
+
 # TODO: replace Ollama embedding function with API call
 # Initalise embedding function
 def get_embedding_function():

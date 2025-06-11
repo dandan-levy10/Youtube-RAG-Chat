@@ -2,6 +2,7 @@ from pydantic import BaseModel, HttpUrl
 
 from db.models import ChatMessage, Summary
 
+
 class SummaryRequest(BaseModel):
     video_url: HttpUrl
 

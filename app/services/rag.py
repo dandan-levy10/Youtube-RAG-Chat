@@ -7,8 +7,8 @@ from sqlmodel import Session
 
 from app.services.chunking import chunk_documents
 from app.services.embedding import embed_and_save
-from app.vector_database import get_embedding_function, get_vector_store
 from app.services.transcription import extract_video_id, get_transcript
+from app.vector_database import get_embedding_function, get_vector_store
 
 logger = logging.getLogger(__name__)
 
