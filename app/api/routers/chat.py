@@ -4,7 +4,8 @@ from uuid import uuid4
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
 from sqlmodel import Session
 
-from app.models.schemas import ChatMessage, ChatRequest, ChatResponse, LoadChatResponse
+from app.backend_schemas import ChatMessage, ChatRequest, LoadChatResponse
+from shared.schemas import ChatResponse
 from app.services.rag import rag_chat_service
 from app.services.transcription import extract_video_id
 from db.crud import load_history, load_summary, save_message

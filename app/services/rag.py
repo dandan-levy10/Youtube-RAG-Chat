@@ -6,7 +6,8 @@ from langchain_ollama import OllamaLLM
 from sqlmodel import Session
 
 from app.services.chunking import chunk_documents
-from app.services.embedding import embed_and_save, get_embedding_function
+from app.services.embedding import embed_and_save
+from app.vector_database import get_embedding_function, get_vector_store
 from app.services.transcription import extract_video_id, get_transcript
 
 logger = logging.getLogger(__name__)
@@ -110,10 +111,7 @@ def create_chat_session() -> ChatSession:
     # (1) instantiate your pieces
     memory    = ChatMemory(max_turns=5)
     embedding_function = get_embedding_function()
-    vectordb = Chroma(
-        embedding_function= embedding_function,
-        persist_directory="app/chroma_db"
-        )
+    vectordb = get_vector_store(embedding_function)
     retriever = TranscriptRetriever(vector_store=vectordb, k=6)
     llm       = OllamaLLM(model="llama3.2")
 

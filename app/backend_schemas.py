@@ -2,26 +2,13 @@ from pydantic import BaseModel, HttpUrl
 
 from db.models import ChatMessage, Summary
 
-
 class SummaryRequest(BaseModel):
     video_url: HttpUrl
-
-class SummaryResponse(BaseModel):
-    video_id: str
-    summary: str
-    title: str
 
 class IngestedSummaryData(BaseModel):
     video_id: str
     summary: str
     title: str
-
-class ChatRequest(BaseModel):
-    video_url: HttpUrl
-    question: str
-
-class ChatResponse(BaseModel):
-    answer: str
 
 class PreviousConversationItem(BaseModel):
     video_id: str
@@ -39,3 +26,7 @@ class LoadChatResponse(BaseModel):
     video_id: str
     history: list[ChatMessage]
     summary: Summary
+    
+class ChatRequest(BaseModel):
+    video_url: HttpUrl
+    question: str

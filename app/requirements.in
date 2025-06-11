@@ -1,9 +1,8 @@
-# requirements.in
+# backend requirements.in
 
 # Backend Framework & Server
 fastapi
 uvicorn[standard]
-python-dotenv
 
 # Database & Data Models
 sqlmodel
@@ -18,10 +17,6 @@ youtube-transcript-api
 pypdf             # For document processing, likely used by LangChain
 chromadb
 
-# Frontend
-streamlit
-requests          # For making API calls from Streamlit to FastAPI
-
 # --- Development & Testing ---
 # Add a new line and "-c requirements.in" to your pip-compile command
 # to separate dev dependencies. For now, we'll keep it simple.
@@ -31,3 +26,6 @@ flake8            # Add the linter for your CI pipeline
 autoflake
 isort
 mypy
+
+# Configuration
+python-dotenv

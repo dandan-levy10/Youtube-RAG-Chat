@@ -16,7 +16,7 @@ from sqlmodel import Session, SQLModel
 from app.api.routers.chat import router as chat_router
 from app.api.routers.session import router as session_router
 from app.api.routers.summary import router as summary_router
-from app.models.schemas import PreviousConversationItem, PreviousConversationsResponse
+from app.backend_schemas import PreviousConversationItem, PreviousConversationsResponse
 from db.crud import get_video_ids_and_titles_by_user_id
 from db.session import engine, get_session
 

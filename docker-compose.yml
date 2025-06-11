@@ -1,0 +1,48 @@
+services:
+  # FastAPI Backend Service
+  backend:
+    build:
+      context: . # Use the project root (where docker-compose.yml lives) as the context
+      dockerfile: ./app/Dockerfile # Path to the backend's Dockerfile
+    container_name: backend
+    ports:
+      - "8000:8000" # Map host port 8000 to container port 8000
+    environment:
+      # Pass the ChromaDB and Ollama hostnames to your backend
+      CHROMA_HOST: chromadb
+      OLLAMA_HOST: http://host.docker.internal:11434 # For connecting to Ollama on the host
+    depends_on:
+      - chromadb # Ensures chromadb starts before the backend
+    volumes:
+      - ./app:/app            # Mounts your local backend code into the container for live-reloading
+      - ./config:/code/config  # Mounts the shared config into the backend
+      - ./data:/code/data     # Mounts the sqlite db to the backend
+      - ./models:/code/models
+    
+  # Streamlit Frontend Service
+  frontend:
+    build: ./frontend # Path to the frontend's Dockerfile
+    container_name: frontend
+    ports:
+      - "8501:8501" # Map host port 8501 to container port 8501
+    environment:
+      # Tell the frontend where the backend API is
+      BACKEND_URL: http://backend:8000
+    depends_on:
+      - backend # Ensures backend starts before the frontend
+    volumes:
+      - ./frontend:/frontend # Mounts your local frontend code for live-reloading
+      - ./config:/frontend/config  # Mounts the shared config into the frontend
+      - ./models:/frontend/models
+
+  # ChromaDB Service
+  chromadb:
+    image: chromadb/chroma # Use the official ChromaDB image
+    container_name: chromadb
+    ports:
+      - "8001:8000" # Map host port 8001 to Chroma's default port 8000
+    volumes:
+      - chroma_data:/chroma/chroma
+
+volumes:
+  chroma_data: # Defines the named volume for persistence

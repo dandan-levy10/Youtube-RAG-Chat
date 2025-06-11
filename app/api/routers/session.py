@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from fastapi import APIRouter, Cookie, Response
 
-from app.models.schemas import SessionInitData
+from app.backend_schemas import SessionInitData
 
 logger = logging.getLogger()
 

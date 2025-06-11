@@ -1,1 +1,1 @@
-DATABASE_URL = "sqlite:///./data/chat.db"
+DATABASE_URL = "sqlite:///./data/chat.db" # TODO: move this to an environment variable in .env
