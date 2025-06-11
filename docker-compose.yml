@@ -17,7 +17,7 @@ services:
       - ./app:/app            # Mounts your local backend code into the container for live-reloading
       - ./config:/code/config  # Mounts the shared config into the backend
       - ./data:/code/data     # Mounts the sqlite db to the backend
-      - ./models:/code/models
+      - ./shared:/code/shared
     
   # Streamlit Frontend Service
   frontend:
@@ -33,7 +33,7 @@ services:
     volumes:
       - ./frontend:/frontend # Mounts your local frontend code for live-reloading
       - ./config:/frontend/config  # Mounts the shared config into the frontend
-      - ./models:/frontend/models
+      - ./shared:/frontend/shared  # Mounts the shared pydantic models into the frontend
 
   # ChromaDB Service
   chromadb:
