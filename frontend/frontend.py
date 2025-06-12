@@ -100,7 +100,7 @@ def load_past_conversations():
 def fetch_summary(video_url: str) -> SummaryResponse:
     payload = {"video_url": video_url}
     try:
-        response = api.post(f"{API_BASE}/summarise", json=payload)
+        response = api.post(f"{API_BASE}/summarise/", json=payload)
         response.raise_for_status()
         data = response.json()
 
@@ -119,9 +119,9 @@ def fetch_chat(video_url: str, question: str) -> ChatResponse:
         "question": question
     }
 
-    response = api.post(f"{API_BASE}/chat", json=payload)
+    response = api.post(f"{API_BASE}/chat/", json=payload)
     response.raise_for_status()
-    data = response.json
+    data = response.json()
     # Validate the response
     validated_response = ChatResponse.model_validate(data)
     return validated_response

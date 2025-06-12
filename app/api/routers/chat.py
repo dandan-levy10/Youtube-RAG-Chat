@@ -29,52 +29,67 @@ def chat_endpoint(
     db: Session = Depends(get_session),
     user_id: str | None = Cookie(default=None)
     ):
-    # retrieve or create session_id
-    if user_id is None:
-        user_id = str(uuid4())
-        logger.debug(f"Created a new UUID: {user_id}")
-        response.set_cookie(
-            key="user_id",
-            value=user_id,
-            httponly=True,
-            max_age=3600,
-            samesite="strict",
-            secure=False,
-            path="/"
-        )
-        logger.debug(f"Assigned and set new user_id cookie: {user_id}")
-    
-    video_id = extract_video_id(str(request.video_url)) # convert HttpUrl to str
-    
-    # This is the guard clause. We handle the "None" case here.
-    if video_id is None:
-        # If we can't get a video_id, we can't proceed.
-        # It's best to stop and return an error to the user.
-        raise HTTPException(
-            status_code=400, 
-            detail="Could not extract a valid video ID from the provided URL."
-        )
-    
-    # Load history from SQL DB 
-    chat_history_objects: list[ChatMessage] = load_history(db, user_id, video_id)   # Retrieves List[ChatMessage]
-    history: list[tuple[str, str]] = [(item.question, item.answer) for item in chat_history_objects]
-
-    if not history:
-        logger.debug("DB miss. History empty")
-    else:
-        logger.debug(f"DB hit. History: {history}")
-
-    # Perform RAG QA call
     try:
+        # # --- ALL OF YOUR ORIGINAL CODE GOES INSIDE THIS TRY BLOCK ---
+        # retrieve or create session_id
+        if user_id is None:
+            user_id = str(uuid4())
+            logger.debug(f"Created a new UUID: {user_id}")
+            response.set_cookie(
+                key="user_id",
+                value=user_id,
+                httponly=True,
+                max_age=3600,
+                samesite="strict",
+                secure=False,
+                path="/"
+            )
+            logger.debug(f"Assigned and set new user_id cookie: {user_id}")
+        
+        video_id = extract_video_id(str(request.video_url)) # convert HttpUrl to str
+        
+        # This is the guard clause. We handle the "None" case here.
+        if video_id is None:
+            # If we can't get a video_id, we can't proceed.
+            # It's best to stop and return an error to the user.
+            raise HTTPException(
+                status_code=400, 
+                detail="Could not extract a valid video ID from the provided URL."
+            )
+        
+        # Load history from SQL DB 
+        chat_history_objects: list[ChatMessage] = load_history(db, user_id, video_id)   # Retrieves List[ChatMessage]
+        history: list[tuple[str, str]] = [(item.question, item.answer) for item in chat_history_objects]
+
+        if not history:
+            logger.debug("DB miss. History empty")
+        else:
+            logger.debug(f"DB hit. History: {history}")
+
+        # Perform RAG QA call
+        # try:
         answer = rag_chat_service(
             video_url=str(request.video_url),
             question=request.question,
             history=history,
             db=db
             )
+        # except Exception as ed:
+        #     logger.exception("❌ rag_chat_service failed")
+        #     raise HTTPException(status_code=502, detail=str(e)) from e
+    
     except Exception as e:
-        logger.exception("❌ rag_chat_service failed")
-        raise HTTPException(status_code=502, detail=str(e)) from e
+        # This will catch ANY error from anywhere in the function
+        print(f"!!! A FATAL ERROR OCCURRED IN chat_endpoint: {e}", flush=True)
+        
+        # This will print the full, multi-line traceback we need to see
+        traceback.print_exc() 
+        
+        # Raise a proper HTTP error
+        raise HTTPException(
+            status_code=500,
+            detail=f"An internal error occurred: {e}"
+        )
 
     # # Save Q&A DB
     save_message(db, request.question, answer, video_id, user_id)

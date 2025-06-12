@@ -3,7 +3,7 @@ import logging
 from langchain_chroma import Chroma
 from langchain_ollama import OllamaEmbeddings
 
-from app.vector_database import get_embedding_function
+from app.vector_database import get_embedding_function, get_vector_store
 
 logger = logging.getLogger(__name__)
 
@@ -19,10 +19,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 def embed_and_save(documents):
     embedding_function = get_embedding_function() # Returns nomic-embed Ollama embeddings model
     
-    vectordb = Chroma(
-        embedding_function= embedding_function,
-        persist_directory="app/chroma_db"
-        )
+    vectordb = get_vector_store()
     logger.info(f"Connected to ChromaDB {vectordb._persist_directory}")
 
     metas = [doc.metadata for doc in documents]
