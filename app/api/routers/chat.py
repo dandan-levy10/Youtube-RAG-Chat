@@ -29,6 +29,7 @@ def chat_endpoint(
     db: Session = Depends(get_session),
     user_id: str | None = Cookie(default=None)
     ):
+    # TODO: manage exceptions more robustly here
     try:
         # # --- ALL OF YOUR ORIGINAL CODE GOES INSIDE THIS TRY BLOCK ---
         # retrieve or create session_id
@@ -74,7 +75,7 @@ def chat_endpoint(
             history=history,
             db=db
             )
-        # except Exception as ed:
+        # except Exception as e:
         #     logger.exception("❌ rag_chat_service failed")
         #     raise HTTPException(status_code=502, detail=str(e)) from e
     

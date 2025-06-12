@@ -27,3 +27,6 @@ __pycache__/
 # Environment folders
 /.venv
 __pycache__/
+
+# 
+.vscode

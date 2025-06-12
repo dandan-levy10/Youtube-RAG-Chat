@@ -19,7 +19,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 def embed_and_save(documents):
     embedding_function = get_embedding_function() # Returns nomic-embed Ollama embeddings model
     
-    vectordb = get_vector_store()
+    vectordb = get_vector_store(embedding_function)
     logger.info(f"Connected to ChromaDB {vectordb._persist_directory}")
 
     metas = [doc.metadata for doc in documents]

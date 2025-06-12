@@ -3,12 +3,13 @@ import logging
 from langchain.vectorstores import VectorStore
 from langchain_chroma.vectorstores import Chroma
 from langchain_ollama import OllamaLLM
+from langchain.schema import Document
 from sqlmodel import Session
 
 from app.services.chunking import chunk_documents
 from app.services.embedding import embed_and_save
 from app.services.transcription import extract_video_id, get_transcript
-from app.vector_database import get_embedding_function, get_vector_store
+from app.vector_database import get_embedding_function, get_vector_store, check_if_vectors_exist
 
 logger = logging.getLogger(__name__)
 
@@ -120,32 +121,23 @@ def create_chat_session() -> ChatSession:
     logger.debug("Chat session created.")
     return session
 
-def has_documents_for(video_id: str, vectordb: Chroma) -> bool:
-    col = vectordb._collection
-    result = col.get(where={"video_id": video_id}, limit=1)
-    documents = result["documents"]
-    if documents and len(documents) > 0:
-        return True
-    else:
-        return False
-
 def history_to_prompt(history: list[tuple[str,str]]) -> str:
     history_chunks = [f"User: {u}\n Assistant: {a}" for u, a in history]
     return "\n\n".join(history_chunks)
 
 def rag_chat_service(video_url: str, question: str, history: list[tuple[str,str]], db: Session) -> str:
     # extract video_id
-    video_id = extract_video_id(video_url=video_url)
+    video_id: str = extract_video_id(video_url)
     # create chat session
-    session = create_chat_session()
+    session: ChatSession = create_chat_session()
     # if not video_id exists in vectordb
-    if not has_documents_for(video_id=video_id, vectordb=session.vectorstore):
+    if not check_if_vectors_exist(video_id, session.vectorstore):
         # retrieve transcript
-        documents = get_transcript(video_url=video_url, db=db)
+        documents: list[Document] = get_transcript(video_url=video_url, db=db)
         # chunk transcript
-        chunks = chunk_documents(documents, chunk_size= 800, chunk_overlap= 50)
+        chunks: list[Document] = chunk_documents(documents, chunk_size= 800, chunk_overlap= 50)
         # embed chunks, upload to vectordb
         embed_and_save(chunks)
     
-    answer = session.ask(question=question, history = history, video_id=video_id)
+    answer: str = session.ask(question=question, history = history, video_id=video_id)
     return answer
