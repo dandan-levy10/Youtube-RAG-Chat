@@ -69,6 +69,8 @@ fastapi==0.115.9
     #   chromadb
 filelock==3.18.0
     # via huggingface-hub
+filetype==1.2.0
+    # via langchain-google-genai
 flake8==7.2.0
     # via -r requirements.in
 flatbuffers==25.2.10
@@ -83,14 +85,28 @@ gitdb==4.0.12
     # via gitpython
 gitpython==3.1.44
     # via streamlit
+google-ai-generativelanguage==0.6.18
+    # via langchain-google-genai
+google-api-core==2.25.0
+    # via google-ai-generativelanguage
 google-auth==2.40.3
-    # via kubernetes
+    # via
+    #   google-ai-generativelanguage
+    #   google-api-core
+    #   kubernetes
 googleapis-common-protos==1.70.0
-    # via opentelemetry-exporter-otlp-proto-grpc
+    # via
+    #   google-api-core
+    #   grpcio-status
+    #   opentelemetry-exporter-otlp-proto-grpc
 grpcio==1.72.1
     # via
     #   chromadb
+    #   google-api-core
+    #   grpcio-status
     #   opentelemetry-exporter-otlp-proto-grpc
+grpcio-status==1.71.0
+    # via google-api-core
 h11==0.16.0
     # via
     #   httpcore
@@ -155,8 +171,11 @@ langchain-core==0.3.64
     #   langchain
     #   langchain-chroma
     #   langchain-community
+    #   langchain-google-genai
     #   langchain-ollama
     #   langchain-text-splitters
+langchain-google-genai==2.1.5
+    # via -r requirements.in
 langchain-ollama==0.3.3
     # via -r requirements.in
 langchain-text-splitters==0.3.8
@@ -280,11 +299,19 @@ propcache==0.3.1
     # via
     #   aiohttp
     #   yarl
+proto-plus==1.26.1
+    # via
+    #   google-ai-generativelanguage
+    #   google-api-core
 protobuf==5.29.5
     # via
+    #   google-ai-generativelanguage
+    #   google-api-core
     #   googleapis-common-protos
+    #   grpcio-status
     #   onnxruntime
     #   opentelemetry-proto
+    #   proto-plus
     #   streamlit
 pyarrow==20.0.0
     # via streamlit
@@ -302,6 +329,7 @@ pydantic==2.11.5
     #   fastapi
     #   langchain
     #   langchain-core
+    #   langchain-google-genai
     #   langsmith
     #   ollama
     #   pydantic-settings
@@ -356,6 +384,7 @@ referencing==0.36.2
 requests==2.32.3
     # via
     #   -r requirements.in
+    #   google-api-core
     #   huggingface-hub
     #   kubernetes
     #   langchain

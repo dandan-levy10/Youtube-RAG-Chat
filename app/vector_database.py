@@ -3,7 +3,7 @@ import logging
 import chromadb
 from chromadb import ClientAPI
 from langchain_chroma.vectorstores import Chroma
-from langchain_ollama import OllamaEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 from config import settings
 
@@ -12,7 +12,10 @@ logger = logging.getLogger()
 # TODO: replace Ollama embedding function with API call
 # Initalise embedding function
 def get_embedding_function():
-    embedding_function = OllamaEmbeddings(model="nomic-embed-text")
+    embedding_function = GoogleGenerativeAIEmbeddings(
+        model="models/text-embedding-004",
+        google_api_key=settings.GEMINI_API_KEY,
+    )
     return embedding_function
 
 # --- Globals to hold our single client and vector store instance ---

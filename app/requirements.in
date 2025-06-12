@@ -9,7 +9,7 @@ sqlmodel
 
 # LangChain & AI Components
 langchain-community
-langchain-ollama
+langchain-google-genai
 langchain-chroma  # Wrapper for ChromaDB integration
 langchain
 yt-dlp

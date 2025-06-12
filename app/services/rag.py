@@ -3,6 +3,7 @@ import logging
 from langchain.vectorstores import VectorStore
 from langchain_chroma.vectorstores import Chroma
 from langchain_ollama import OllamaLLM
+from langchain_google_genai import GoogleGenerativeAI
 from langchain.schema import Document
 from sqlmodel import Session
 
@@ -10,6 +11,7 @@ from app.services.chunking import chunk_documents
 from app.services.embedding import embed_and_save
 from app.services.transcription import extract_video_id, get_transcript
 from app.vector_database import get_embedding_function, get_vector_store, check_if_vectors_exist
+from app.llm import get_llm
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +63,7 @@ class TranscriptRetriever:
         return context
         
 class ChatSession:
-    def __init__(self, llm: OllamaLLM, vectordb: Chroma, retriever: TranscriptRetriever, memory: ChatMemory, prompt_template: str) -> None:
+    def __init__(self, llm: GoogleGenerativeAI, vectordb: Chroma, retriever: TranscriptRetriever, memory: ChatMemory, prompt_template: str) -> None:
         self.llm = llm
         self.vectorstore = vectordb
         self.retriever = retriever
@@ -110,11 +112,11 @@ prompt_starter = "You are an assistant for question-answering tasks. Use the fol
 
 def create_chat_session() -> ChatSession:
     # (1) instantiate your pieces
-    memory    = ChatMemory(max_turns=5)
+    memory = ChatMemory(max_turns=5)
     embedding_function = get_embedding_function()
     vectordb = get_vector_store(embedding_function)
     retriever = TranscriptRetriever(vector_store=vectordb, k=6)
-    llm       = OllamaLLM(model="llama3.2")
+    llm: GoogleGenerativeAI = get_llm()
 
     # (2) create a session
     session = ChatSession(llm=llm, vectordb=vectordb, retriever=retriever, memory=memory, prompt_template= prompt_starter)
