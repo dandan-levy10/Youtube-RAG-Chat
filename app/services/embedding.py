@@ -1,8 +1,5 @@
 import logging
 
-from langchain_chroma import Chroma
-from langchain_ollama import OllamaEmbeddings
-
 from app.vector_database import get_embedding_function, get_vector_store
 
 logger = logging.getLogger(__name__)
@@ -13,8 +10,6 @@ logging.getLogger("chromadb.telemetry.product.posthog").setLevel(logging.WARNING
 # Silence httpx request/response logs (used by Chroma under the hood)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
-
- 
 
 def embed_and_save(documents):
     embedding_function = get_embedding_function() # Returns nomic-embed Ollama embeddings model

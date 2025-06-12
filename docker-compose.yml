@@ -4,24 +4,30 @@ services:
     build:
       context: . # Use the project root (where docker-compose.yml lives) as the context
       dockerfile: ./app/Dockerfile # Path to the backend's Dockerfile
+    env_file:
+      - .env  #
     container_name: backend
     ports:
       - "8000:8000" # Map host port 8000 to container port 8000
     environment:
-      # Pass the ChromaDB and Ollama hostnames to your backend
+      # Pass the ChromaDB hostname & port to your backend- rest of variables taken from .env defaults
       CHROMA_HOST: chromadb
-      OLLAMA_HOST: http://host.docker.internal:11434 # For connecting to Ollama on the host
+      CHROMA_PORT: 8000 # The internal port for Chroma
     depends_on:
       - chromadb # Ensures chromadb starts before the backend
     volumes:
-      - ./app:/app            # Mounts your local backend code into the container for live-reloading
+      - ./app:/code/app            # Mounts your local backend code into the container for live-reloading
       - ./config:/code/config  # Mounts the shared config into the backend
       - ./data:/code/data     # Mounts the sqlite db to the backend
       - ./shared:/code/shared
     
   # Streamlit Frontend Service
   frontend:
-    build: ./frontend # Path to the frontend's Dockerfile
+    build: 
+      context: . 
+      dockerfile: ./frontend/Dockerfile # Path to the frontend's Dockerfile
+    env_file:
+      - .env
     container_name: frontend
     ports:
       - "8501:8501" # Map host port 8501 to container port 8501
@@ -31,9 +37,9 @@ services:
     depends_on:
       - backend # Ensures backend starts before the frontend
     volumes:
-      - ./frontend:/frontend # Mounts your local frontend code for live-reloading
-      - ./config:/frontend/config  # Mounts the shared config into the frontend
-      - ./shared:/frontend/shared  # Mounts the shared pydantic models into the frontend
+      - ./frontend:/code/frontend # Mounts your local frontend code for live-reloading
+      - ./config:/code/frontend/config  # Mounts the shared config into the frontend
+      - ./shared:/code/frontend/shared  # Mounts the shared pydantic models into the frontend
 
   # ChromaDB Service
   chromadb:

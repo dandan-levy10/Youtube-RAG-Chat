@@ -2,7 +2,7 @@
 FROM python:3.12-slim
 
 # Set the working directory in the container
-WORKDIR /frontend
+WORKDIR /code
 
 # [Optimisation] Install uv itself first.
 # This step will be cached and run only once
@@ -21,4 +21,4 @@ COPY . .
 EXPOSE 8501
 
 # Command to run the streamlit app
-CMD ["streamlit", "run", "frontend.py"]
+CMD ["streamlit", "run", "frontend/frontend.py"]

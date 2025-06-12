@@ -121,7 +121,6 @@ httpx==0.28.1
     # via
     #   chromadb
     #   langsmith
-    #   ollama
 httpx-sse==0.4.0
     # via langchain-community
 huggingface-hub==0.32.4
@@ -172,11 +171,8 @@ langchain-core==0.3.64
     #   langchain-chroma
     #   langchain-community
     #   langchain-google-genai
-    #   langchain-ollama
     #   langchain-text-splitters
 langchain-google-genai==2.1.5
-    # via -r requirements.in
-langchain-ollama==0.3.3
     # via -r requirements.in
 langchain-text-splitters==0.3.8
     # via langchain
@@ -224,8 +220,6 @@ oauthlib==3.2.2
     # via
     #   kubernetes
     #   requests-oauthlib
-ollama==0.5.1
-    # via langchain-ollama
 onnxruntime==1.22.0
     # via chromadb
 opentelemetry-api==1.34.0
@@ -331,7 +325,6 @@ pydantic==2.11.5
     #   langchain-core
     #   langchain-google-genai
     #   langsmith
-    #   ollama
     #   pydantic-settings
     #   sqlmodel
 pydantic-core==2.33.2

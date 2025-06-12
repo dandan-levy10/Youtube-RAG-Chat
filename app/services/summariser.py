@@ -3,20 +3,16 @@ from typing import TypedDict, cast
 
 from langchain.chains.summarize import load_summarize_chain
 from langchain_core.documents import Document
-from langchain_ollama import OllamaLLM
 from sqlmodel import Session
 
 from app.backend_schemas import IngestedSummaryData
 from app.services.transcription import extract_video_id, get_transcript
 from db.crud import load_summary, save_summary
+from app.llm import get_llm
 
 logger = logging.getLogger(__name__)
 
-llm = OllamaLLM(
-    model="llama3.2:latest",
-    temperature=0.0,
-    num_predict=256, # Max tokens to predict when generating text
-    )
+llm = get_llm()
 
 class SummaryChainOutput(TypedDict):
     output_text: str

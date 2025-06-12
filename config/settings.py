@@ -13,4 +13,4 @@ CHROMA_HOST = os.getenv("CHROMA_HOST", "localhost")
 CHROMA_PORT = int(os.getenv("CHROMA_PORT", 8000))
 
 # --------- API Keys -----------
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") # TODO: configure gemini api key, replace LLM
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") 

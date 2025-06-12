@@ -9,12 +9,16 @@ from config import settings
 
 logger = logging.getLogger()
 
-# TODO: replace Ollama embedding function with API call
 # Initalise embedding function
-def get_embedding_function():
+def get_embedding_function() -> GoogleGenerativeAIEmbeddings:
+    
+    api_key = settings.GEMINI_API_KEY
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY not found for embedding function. Please check your .env file.")
+    
     embedding_function = GoogleGenerativeAIEmbeddings(
         model="models/text-embedding-004",
-        google_api_key=settings.GEMINI_API_KEY,
+        google_api_key=api_key,
     )
     return embedding_function
 

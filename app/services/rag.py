@@ -2,7 +2,6 @@ import logging
 
 from langchain.vectorstores import VectorStore
 from langchain_chroma.vectorstores import Chroma
-from langchain_ollama import OllamaLLM
 from langchain_google_genai import GoogleGenerativeAI
 from langchain.schema import Document
 from sqlmodel import Session
@@ -97,9 +96,9 @@ class ChatSession:
         logger.debug(f"Prompt: {prompt}")
 
         # 3) Call the LLM
-        result = self.llm.generate([prompt])
+        result = self.llm.invoke(prompt)
         logger.info(f"LLM called. Result: {result}")
-        answer = result.generations[0][0].text
+        answer = result.content
         # logger.info(f"LLM answer text: {answer}")
 
         # 4) Update memory
